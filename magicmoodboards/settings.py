@@ -38,7 +38,7 @@ else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     DEBUG = False
 
-ALLOWED_HOSTS = ['mazuma-ebay-test-0d9c445e584b.herokuapp.com/', 'localhost']
+ALLOWED_HOSTS = ['mazuma-ebay-test-0d9c445e584b.herokuapp.com', 'localhost']
 
 # Application definition
 
