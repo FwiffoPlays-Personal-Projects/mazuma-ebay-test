@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Moodboard App</title>
+  <title>Mazuma eBay</title>
   <!-- Add Bootstrap CSS -->
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -12,7 +12,7 @@
 
 <body>    
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="{% url 'moodboard:index' %}">Magic Moodboards</a>
+    <a class="navbar-brand" href="{% url 'moodboard:index' %}">Mazuma eBay Pictures</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -27,7 +27,7 @@
             <a class="nav-link" href="{% url 'account_logout' %}">Logout</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'moodboard:create_moodboard' %}">Create Moodboard</a>
+            <a class="nav-link" href="{% url 'moodboard:create_moodboard' %}">Add Item</a>
           </li>
         {% else %}
           <li class="nav-item">

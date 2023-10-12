@@ -4,7 +4,7 @@
     <div class="container">
     {% if user.is_authenticated %}
       
-      <h2 class="my-4">Create a Moodboard</h2>
+      <h2 class="my-4">New Item</h2>
       <form method="post" enctype="multipart/form-data" class="mb-3">
         {% csrf_token %}
         {% for field in form %}
@@ -20,10 +20,10 @@
           <label for="image" class="form-label">Images:</label>
           <input type="file" name="image" id="image" multiple class="form-control">
         </div>
-        <button type="submit" class="btn btn-primary">Create Moodboard</button>
+        <button type="submit" class="btn btn-primary">]Submit Item</button>
       </form>
     {% else %}
-      <h2 class="my-4">You must be signed in to create a moodboard.</h2>
+      <h2 class="my-4">You must be signed in to add an item.</h2>
     {% endif %}
   </div>
 {% endblock %}

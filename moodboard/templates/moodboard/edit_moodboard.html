@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Edit Moodboard</h2>
+  <h2>Edit Item</h2>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
@@ -17,7 +17,7 @@
     <div class="row">
       {% for image in images %}
         <div class="col-md-4">
-          <img src="{{ image.image }}" alt="Moodboard image" class="img-thumbnail">
+          <img src="{{ image.image }}" alt="Item image" class="img-thumbnail">
         </div>
       {% endfor %}
     </div>
@@ -26,6 +26,6 @@
       <input type="file" name="image" id="image" multiple class="form-control-file">
       <small class="form-text text-muted">Note: Uploading new images will replace the current images.</small>
     </div>
-    <button type="submit" class="btn btn-primary">Update Moodboard</button>
+    <button type="submit" class="btn btn-primary">Update Item</button>
   </form>
 {% endblock %}
