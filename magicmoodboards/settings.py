@@ -34,11 +34,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 if 'DEVELOPMENT' in os.environ:
     STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
     DEBUG = True
+    ALLOWED_HOSTS = ['*'] # Allows all hosts, should only be used for development
+    
 else:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     DEBUG = False
+    ALLOWED_HOSTS = ['mazuma-ebay-test-0d9c445e584b.herokuapp.com', 'localhost']
 
-ALLOWED_HOSTS = ['mazuma-ebay-test-0d9c445e584b.herokuapp.com', 'localhost']
+#ALLOWED_HOSTS = ['*']
 
 # Application definition
 

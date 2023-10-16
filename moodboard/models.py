@@ -19,7 +19,10 @@ class Moodboard(models.Model):
     description = models.TextField(blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tags = models.CharField(max_length=500, blank=True)
-
+    manufacturer = models.CharField(max_length=100, blank=True, null=True)
+    model_number = models.CharField(max_length=100, blank=True, null=True)
+    stock_id = models.CharField(max_length=100, blank=True, null=True)
+    
     def tags_as_list(self):
         """
         Returns the tags as a list of strings.
