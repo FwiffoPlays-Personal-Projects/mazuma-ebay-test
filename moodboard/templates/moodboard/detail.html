@@ -5,7 +5,7 @@
     <div class="row">
         <div class="col-lg-8 col-md-12">
             <h2>{{ moodboard.title }} - {{ moodboard.model_number }}</h2>
-            <p>StockID: {{ moodboard.stock_id }}</p>
+            <span class="badge bg-secondary">{{ moodboard.stock_id }}</span>
             <p class="font-weight-bold">Description</p>
             <p>{{ moodboard.description }}</p>
         </div>
@@ -15,7 +15,8 @@
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this item?');">Delete Item</button>
                 </form>
-                <a href="{% url 'moodboard:edit_moodboard' moodboard_id=moodboard.id %}" class="btn btn-secondary">Edit</a>
+                <a href="{% url 'moodboard:edit_moodboard' moodboard_id=moodboard.id %}" class="btn btn-secondary">Edit</a><br>
+                <a href="" class="btn btn-primary">Download</a>
             {% endif %}
         </div>
     </div>

@@ -5,7 +5,7 @@ from .models import Moodboard, Image
 class MoodboardForm(forms.ModelForm):
     class Meta:
         model = Moodboard
-        fields = ["title", "description", "tags", "manufacturer", "model_number", "stock_id"]
+        fields = ["title", "manufacturer", "model_number", "stock_id", "description"]
 
 
 class ImageForm(forms.ModelForm):

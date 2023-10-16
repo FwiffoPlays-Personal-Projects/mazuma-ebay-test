@@ -48,7 +48,7 @@ def create_moodboard(request):
 
     return render(request, "moodboard/create_moodboard.html", context)
 
-
+@login_required
 def edit_moodboard(request, moodboard_id):
     """
     Handles the editing of an existing Moodboard.
@@ -76,7 +76,7 @@ def edit_moodboard(request, moodboard_id):
                         Image.objects.create(moodboard=moodboard,
                                              image=image_url)
 
-                messages.success(request, "Moodboard has been updated.")
+                messages.success(request, "Item has been updated.")
                 return redirect("moodboard:detail", pk=moodboard_id)
         else:
             form = MoodboardForm(instance=moodboard)
@@ -88,7 +88,7 @@ def edit_moodboard(request, moodboard_id):
         )
     else:
         return HttpResponseForbidden(
-            "You don't have permission to edit this Moodboard."
+            "You don't have permission to edit this Item."
         )
 
 
@@ -105,11 +105,11 @@ def delete_moodboard(request, pk):
 
     if request.user == moodboard.user or request.user.is_staff:
         moodboard.delete()
-        messages.success(request, "Moodboard has been deleted.")
+        messages.success(request, "Item has been deleted.")
         return redirect("moodboard:index")
     else:
         messages.error(request, "You do not have permission to delete this "
-                                "moodboard.")
+                                "item.")
         return redirect("moodboard:detail", pk=pk)
 
 

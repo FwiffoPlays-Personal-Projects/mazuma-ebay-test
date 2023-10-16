@@ -13,19 +13,23 @@
                 {{ moodboard.title }}
               </a>
             </h5>
-            {% if moodboard.tags %}
-              <div class="projcard-tagbox">
-                {% for tag in moodboard.tags_as_list %}
-                  <a href="{% url 'moodboard:index' %}?q={{ tag|urlencode }}" class="text-decoration-none">
-                    <span class="badge bg-secondary text-white">{{ tag }}</span>
-                  </a>
-                {% endfor %}
-              </div>
-            {% else %}
-              <div class="projcard-tagbox">
-                <span class="badge bg-secondary">No tags</span>
-              </div>
-            {% endif %}
+            <div class="projcard-tagbox">
+              <span class="badge bg-secondary">{{ moodboard.stock_id }}</span>
+            </div>
+            <div class="row">
+              {% if moodboard.images %}
+                <div class="col-12">
+                  <div class="card mb-4">
+                    <img src="{{ moodboard.images.0.image }}" loading="lazy" class="card-img-top" alt="Item image" onclick="openModalImage(this)" id="image-1" aria-hidden="true">
+                  </div>
+                </div>
+              {% else %}
+                <div class="col-12">
+                  <p>No images for this item.</p>
+                </div>
+              {% endif %}
+        </div>                
+          </div>
             <p class="card-text">
               Submitted by: {{ moodboard.user.username }}
             </p>
