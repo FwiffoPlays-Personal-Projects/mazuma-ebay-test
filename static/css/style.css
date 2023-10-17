@@ -11,28 +11,38 @@
     background-color: rgba(0, 0, 0, 0.4);
   }
   
-  .modal-content {
-    background-color: #fefefe;
-    margin: 2em auto;
-    padding: 20px;
-    border: 1px solid #888;
-    max-width: 80%;
-    width: auto;
-    max-height: 80%;
-    height: auto;
-  }
+.modal-content {
+  background-color: #fefefe;
+  margin: 2em auto;
+  padding: 20px;
+  border: 1px solid #888;
+  max-width: 80%;
+  width: auto;
+  max-height: 80%;
+  height: auto;
+}
   
-  .close {
-    color: #aaaaaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-  }
+.modal-dialog {
+  max-width: 90%;
+}
+
+.modal-content {
+  position: relative;
+}
+
+.close {
+  cursor: pointer;
+}
+
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
   
-  .close:hover,
-  .close:focus {
-    color: #000;
-    text-decoration: none;
-    cursor: pointer;
-  }
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
   

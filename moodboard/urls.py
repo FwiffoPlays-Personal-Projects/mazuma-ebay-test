@@ -13,4 +13,5 @@ urlpatterns = [
          views.edit_moodboard,
          name="edit_moodboard"),
     path("delete/<int:pk>/", views.delete_moodboard, name="delete_moodboard"),
+    path('download_all_images/<int:moodboard_id>/', views.download_all_images, name='download_all_images'),
 ]

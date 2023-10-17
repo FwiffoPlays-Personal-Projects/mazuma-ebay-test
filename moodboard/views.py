@@ -1,10 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 import cloudinary.uploader
 from django.db.models import Q
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from zipfile import ZipFile
+from datetime import datetime
+from io import BytesIO
+import requests
+
 from .forms import MoodboardForm, ImageForm
 from .models import Moodboard, Image
 
@@ -151,3 +156,34 @@ def detail(request, pk):
     images = Image.objects.filter(moodboard_id=pk)
     context = {"moodboard": moodboard, "images": images}
     return render(request, "moodboard/detail.html", context)
+
+
+def download_all_images(request, moodboard_id):
+    moodboard = Moodboard.objects.get(pk=moodboard_id)
+    images = moodboard.images.all()
+    
+    # Initialize a BytesIO object to store the zip file
+    zip_buffer = BytesIO()
+    
+    # Get current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    with ZipFile(zip_buffer, 'w') as zip_file:
+        for image in images:
+            # Download each image into memory
+            img_url = image.image  # Replace with actual Cloudinary URL
+            img_data = requests.get(img_url).content
+            img_buffer = BytesIO(img_data)
+            
+            # Important: Reset the buffer pointer to the beginning
+            img_buffer.seek(0)
+            
+            # Add the image to the zip file
+            zip_file.writestr(f"{image.id}.jpg", img_buffer.read())
+
+    # Prepare the zip file for download
+    response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename={moodboard.title}_{timestamp}.zip'
+    
+    
+    return response
