@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="container">
+  {% if user.is_authenticated %}
   <h2 class="my-4">Items</h2>
   <div class="row">
     {% for moodboard in moodboards %}
@@ -38,5 +39,8 @@
       </div>
     {% endfor %}
   </div>
+  {% else %}
+      <h2 class="my-4">You must be signed in to view this page.</h2>
+  {% endif %}
 </div>
 {% endblock %}
