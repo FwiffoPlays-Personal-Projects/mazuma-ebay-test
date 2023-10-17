@@ -18,29 +18,31 @@
               <span class="badge bg-secondary">{{ moodboard.stock_id }}</span>
             </div>
             <div class="row">
-              {% if moodboard.images %}
-                <div class="col-12">
-                  <div class="card mb-4">
-                    <img src="{{ moodboard.images.0.image }}" loading="lazy" class="card-img-top" alt="Item image" onclick="openModalImage(this)" id="image-1" aria-hidden="true">
-                  </div>
-                </div>
-              {% else %}
-                <div class="col-12">
-                  <p>No images for this item.</p>
-                </div>
-              {% endif %}
-        </div>                
+              {% with first_image=moodboard.images.first %}
+                  {% if first_image %}
+                      <div class="col-12">
+                          <div class="card mb-4">
+                              <!-- Use 'first_image.image' to get the image URL -->
+                              <img src="{{ first_image.image }}" loading="lazy" class="card-img-top" alt="Item image" id="image-1" aria-hidden="true">
+                          </div>
+                      </div>
+                  {% else %}
+                      <div class="col-12">
+                          <p>No images for this item.</p>
+                      </div>
+                  {% endif %}
+              {% endwith %}
           </div>
             <p class="card-text">
               Submitted by: {{ moodboard.user.username }}
             </p>
-          </div>
-        </div>
-      </div>
+          </div> <!-- End of card-body -->
+        </div> <!-- End of card -->
+      </div> <!-- End of col-md-4 col-sm-6 mb-4 -->
     {% endfor %}
-  </div>
+  </div> <!-- End of outer row -->
   {% else %}
       <h2 class="my-4">You must be signed in to view this page.</h2>
   {% endif %}
-</div>
+</div> <!-- End of container -->
 {% endblock %}
