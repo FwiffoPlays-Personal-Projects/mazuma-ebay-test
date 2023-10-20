@@ -22,7 +22,7 @@ class Moodboard(models.Model):
     manufacturer = models.CharField(max_length=100, blank=True, null=True)
     model_number = models.CharField(max_length=100, blank=True, null=True)
     stock_id = models.CharField(max_length=100, blank=True, null=True)
-    
+
     def tags_as_list(self):
         """
         Returns the tags as a list of strings.
@@ -51,7 +51,7 @@ class Image(models.Model):
         moodboard (ForeignKey): A foreign key to the Moodboard to which the
         image belongs.
     """
-    image = models.ImageField(upload_to="moodboard_images")
+    image = models.ImageField(upload_to='item_images/')
     moodboard = models.ForeignKey(
         Moodboard, related_name="images", on_delete=models.CASCADE
     )

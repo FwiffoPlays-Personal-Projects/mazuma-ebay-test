@@ -28,8 +28,8 @@
         {% for image in images %}
             <div class="col-lg-4 col-md-6 col-sm-12">
                 <div class="card mb-4 position-relative">
-                    <img src="{{ image.image }}" loading="lazy" class="card-img-top" alt="Item image" onclick="openModalImage(this)" id="image-{{ forloop.counter }}" aria-hidden="true">
-                    <button onclick="downloadImage('{{ image.image }}')" class="btn btn-secondary position-absolute" style="top: 10px; right: 10px;">Download</button>
+                    <img src="{{ image.image.url }}" loading="lazy" class="card-img-top" alt="Item image" onclick="openModalImage(this)" id="image-{{ forloop.counter }}" aria-hidden="true">
+                    <button onclick="downloadImage('{{ image.image.url }}')" class="btn btn-secondary position-absolute" style="top: 10px; right: 10px;">Download</button>
                 </div>
             </div>
         {% empty %}

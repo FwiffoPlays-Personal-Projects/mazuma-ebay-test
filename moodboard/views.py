@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-import cloudinary.uploader
+#import cloudinary.uploader
 from django.db.models import Q
 from django.http import HttpResponseForbidden, HttpResponse
 from django.contrib.auth.models import User
@@ -36,9 +36,9 @@ def create_moodboard(request):
                 moodboard = form.save()  # Save the moodboard instance
 
                 for img in request.FILES.getlist("image"):
-                    uploaded_image = cloudinary.uploader.upload(img)
-                    image_url = uploaded_image["secure_url"]
-                    Image.objects.create(moodboard=moodboard, image=image_url)
+                    new_image = Image(image=img, moodboard=moodboard)
+                    new_image.save()
+                    #Image.objects.create(moodboard=moodboard, image=image_url)
                 return redirect("moodboard:index")
             else:
                 # Display an error to the user if no images are uploaded
@@ -76,8 +76,8 @@ def edit_moodboard(request, moodboard_id):
 
                     # Upload new images
                     for img in request.FILES.getlist("image"):
-                        uploaded_image = cloudinary.uploader.upload(img)
-                        image_url = uploaded_image["secure_url"]
+                        new_image = Image(image=img, moodboard=moodboard)
+                        new_image.save()
                         Image.objects.create(moodboard=moodboard,
                                              image=image_url)
 
@@ -161,29 +161,28 @@ def detail(request, pk):
 def download_all_images(request, moodboard_id):
     moodboard = Moodboard.objects.get(pk=moodboard_id)
     images = moodboard.images.all()
-    
+
     # Initialize a BytesIO object to store the zip file
     zip_buffer = BytesIO()
-    
+
     # Get current timestamp
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
     with ZipFile(zip_buffer, 'w') as zip_file:
         for image in images:
-            # Download each image into memory
-            img_url = image.image  # Replace with actual Cloudinary URL
-            img_data = requests.get(img_url).content
+            # Read each image directly from the local storage
+            img_data = image.image.read()  # Assuming 'image' is the FileField in your Image model
             img_buffer = BytesIO(img_data)
-            
+
             # Important: Reset the buffer pointer to the beginning
             img_buffer.seek(0)
-            
+
             # Add the image to the zip file
             zip_file.writestr(f"{image.id}.jpg", img_buffer.read())
 
     # Prepare the zip file for download
     response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
     response['Content-Disposition'] = f'attachment; filename={moodboard.title}_{timestamp}.zip'
-    
-    
+
     return response
+
