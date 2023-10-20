@@ -15,3 +15,6 @@ class ImageForm(forms.ModelForm):
         widgets = {
             "image": forms.ClearableFileInput(attrs={"multiple": True}),
         }
+
+class ToggleListedForm(forms.Form):
+    toggle = forms.BooleanField(required=False)

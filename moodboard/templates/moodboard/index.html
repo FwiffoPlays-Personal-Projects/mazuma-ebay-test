@@ -16,6 +16,12 @@
             </h5>
             <div class="projcard-tagbox">
               <span class="badge bg-secondary">{{ moodboard.stock_id }}</span>
+              <p>{{ moodboard.updated_at }}</p>
+              {% if moodboard.listed %}
+                <h5>Listed</h5>
+              {% else %}
+                <h5>Not Listed</h5>
+              {% endif %}
             </div>
             <div class="row">
               {% with first_image=moodboard.images.first %}

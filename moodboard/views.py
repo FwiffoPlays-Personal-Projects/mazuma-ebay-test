@@ -186,3 +186,13 @@ def download_all_images(request, moodboard_id):
 
     return response
 
+
+def toggle_listed(request, moodboard_id):
+    moodboard = get_object_or_404(Moodboard, pk=moodboard_id)
+    
+    if request.user == moodboard.user or request.user.is_staff:
+        moodboard.listed = not moodboard.listed
+        moodboard.save()
+        return redirect('moodboard:detail', pk=moodboard.id)
+    else:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)

@@ -22,6 +22,9 @@ class Moodboard(models.Model):
     manufacturer = models.CharField(max_length=100, blank=True, null=True)
     model_number = models.CharField(max_length=100, blank=True, null=True)
     stock_id = models.CharField(max_length=100, blank=True, null=True)
+    listed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def tags_as_list(self):
         """
