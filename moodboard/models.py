@@ -25,6 +25,8 @@ class Moodboard(models.Model):
     listed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    listed_at = models.DateTimeField(blank=True, null=True)
+
 
     def tags_as_list(self):
         """

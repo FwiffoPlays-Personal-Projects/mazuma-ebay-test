@@ -192,6 +192,11 @@ def toggle_listed(request, moodboard_id):
     
     if request.user == moodboard.user or request.user.is_staff:
         moodboard.listed = not moodboard.listed
+
+                # If toggled to true, update the listed_date
+        if moodboard.listed:
+            moodboard.listed_at = datetime.now()
+
         moodboard.save()
         return redirect('moodboard:detail', pk=moodboard.id)
     else:
