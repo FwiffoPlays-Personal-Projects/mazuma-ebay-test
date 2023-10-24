@@ -203,3 +203,11 @@ def toggle_listed(request, moodboard_id):
         return redirect('moodboard:detail', pk=moodboard.id)
     else:
         return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+def listed_items(request):
+    moodboards = Moodboard.objects.filter(listed=True)
+    return render(request, "moodboard/index.html", {"moodboards": moodboards})
+
+def not_listed_items(request):
+    moodboards = Moodboard.objects.filter(listed=False)
+    return render(request, "moodboard/index.html", {"moodboards": moodboards})

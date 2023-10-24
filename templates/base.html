@@ -24,6 +24,12 @@
 
         {% if user.is_authenticated %}
           <li class="nav-item">
+            <a class="nav-link" href="{% url 'moodboard:listed_items' %}" class="tab">Listed</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'moodboard:not_listed_items' %}" class="tab">Not Listed</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link" href="{% url 'account_logout' %}">Logout</a>
           </li>
           <li class="nav-item">
