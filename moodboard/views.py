@@ -130,6 +130,10 @@ def get_queryset(request):
             Q(title__icontains=query)
             | Q(description__icontains=query)
             | Q(tags__icontains=query)
+            | Q(manufacturer__icontains=query)
+            | Q(model_number__icontains=query)
+            | Q(stock_id__icontains=query)
+            | Q(listed__icontains=query)
         )
     else:
         moodboards = Moodboard.objects.all()
