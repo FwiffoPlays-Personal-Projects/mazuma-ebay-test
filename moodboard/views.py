@@ -76,10 +76,8 @@ def edit_moodboard(request, moodboard_id):
 
                     # Upload new images
                     for img in request.FILES.getlist("image"):
-                        new_image = Image(image=img, moodboard=moodboard)
-                        new_image.save()
-                        Image.objects.create(moodboard=moodboard,
-                                             image=image_url)
+                        # Upload new images
+                        Image.objects.create(moodboard=moodboard, image=img)
 
                 messages.success(request, "Item has been updated.")
                 return redirect("moodboard:detail", pk=moodboard_id)
