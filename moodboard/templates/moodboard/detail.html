@@ -28,7 +28,7 @@
         
         <div class="col-lg-4 col-md-12 text-lg-right text-md-left">
             {% if request.user == moodboard.user or request.user.is_staff %}
-                <div class="btn-group btn-group-lg mb-3" role="group">
+                <div class="btn-group mb-3" role="group">
                     <form action="{% url 'moodboard:delete_moodboard' moodboard.id %}" method="post" class="d-inline-block">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger" style="height: 100%;" onclick="return confirm('Are you sure you want to delete this item?');">
@@ -61,6 +61,7 @@
                 <div class="card mb-4 position-relative">
                     <img src="{{ image.image.url }}" loading="lazy" class="card-img-top" alt="Item image" onclick="openModalImage(this)" id="image-{{ forloop.counter }}" aria-hidden="true">
                     <button onclick="downloadImage('{{ image.image.url }}')" class="btn btn-secondary position-absolute" style="top: 10px; right: 10px;"><i class="fas fa-download"></i></button>
+                    <button class="extract-text" data-image-id="{{ image.id }}">Extract Text</button>
                 </div>
             </div>
         {% empty %}
@@ -88,8 +89,9 @@
 
 
 
-
+{% csrf_token %}
 <script>
+    var csrf_token = '{{ csrf_token }}';
     function openModalImage(imgElement) {
         var modal = document.getElementById("imageModal");
         var modalImg = document.getElementById("modalImg");
@@ -141,6 +143,26 @@
 
         xhr.send();
     }
+
+
+    // Attach click event to all buttons with class 'extract-text'
+    document.querySelectorAll('.extract-text').forEach(button => {
+        button.addEventListener('click', function() {
+            const imageId = this.getAttribute('data-image-id');
+            fetch(`/extract_text/${imageId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf_token  // Your CSRF token
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Do something with extracted text
+                console.log(data.extracted_text);
+            });
+        });
+    });
 
 </script>
 {% else %}

@@ -20,10 +20,51 @@
           <label for="image" class="form-label">Images:</label>
           <input type="file" name="image" id="image" multiple class="form-control">
         </div>
+        <div class="progress" style="">
+          <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
         <button type="submit" class="btn btn-primary">Submit Item</button>
       </form>
+      
     {% else %}
       <h2 class="my-4">You must be signed in to add an item.</h2>
     {% endif %}
   </div>
 {% endblock %}
+
+<script>
+  document.getElementById('image').addEventListener('change', function(){
+    const file = this.files[0];
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+
+    formData.append('image', file);
+
+    // Event listener for the upload progress
+    xhr.upload.addEventListener('progress', function(e){
+        if(e.lengthComputable){
+            const percentage = Math.round((e.loaded * 100) / e.total);
+            const progressBar = document.querySelector('.progress-bar');
+            
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+            progressBar.setAttribute('aria-valuenow', percentage);
+        }
+    });
+
+    // Handle response after upload completion
+    xhr.onload = function(){
+        if(xhr.status === 200){
+            // Handle success, e.g., show a message or refresh the page
+        } else {
+            // Handle errors
+        }
+    };
+
+    // POST the data to Django endpoint
+    xhr.open('POST', '/item_images/', true);
+    xhr.setRequestHeader('X-CSRFToken', 'YOUR_CSRF_TOKEN');  // Add CSRF token for Django
+    xhr.send(formData);
+});
+
+</script>

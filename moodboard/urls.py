@@ -16,4 +16,5 @@ urlpatterns = [
     path('toggle_listed/<int:moodboard_id>/', views.toggle_listed, name='toggle_listed'),
     path('listed/', views.listed_items, name='listed_items'),
     path('not-listed/', views.not_listed_items, name='not_listed_items'),
+    path('extract_text/<int:image_id>/', views.extract_text, name='extract_text'),
 ]

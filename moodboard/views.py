@@ -1,14 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 #import cloudinary.uploader
 from django.db.models import Q
-from django.http import HttpResponseForbidden, HttpResponse
+from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from zipfile import ZipFile
 from datetime import datetime
 from io import BytesIO
+from PIL import Image as PILImage
+from pyzbar.pyzbar import decode as qr_decode
+import pytesseract
 import requests
+import os
 
 from .forms import MoodboardForm, ImageForm
 from .models import Moodboard, Image
@@ -191,7 +195,7 @@ def download_all_images(request, moodboard_id):
 
 def toggle_listed(request, moodboard_id):
     moodboard = get_object_or_404(Moodboard, pk=moodboard_id)
-    
+
     if request.user == moodboard.user or request.user.is_staff:
         moodboard.listed = not moodboard.listed
 
@@ -204,10 +208,64 @@ def toggle_listed(request, moodboard_id):
     else:
         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
+
 def listed_items(request):
     moodboards = Moodboard.objects.filter(listed=True)
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
 
+
 def not_listed_items(request):
     moodboards = Moodboard.objects.filter(listed=False)
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
+
+
+def extract_qr_data(image_path):
+    image = PILImage.open(image_path)
+    output_path = os.path.join(os.path.dirname(image_path), "testing/main_image.jpg")
+    image.save(output_path)
+    print(f"DEBUG: Main image saved to: {output_path}")
+    # Crop to the bottom half to focus on the label with the QR code
+    half_height = image.height // 2
+    bottom_label = image.crop((0, half_height, image.width, image.height))
+    output_path = os.path.join(os.path.dirname(image_path), "testing/bottom_label.jpg")
+    bottom_label.save(output_path)
+    print(f"DEBUG: Cropped bottom label image saved to: {output_path}")
+
+    bottom_width, bottom_height, = bottom_label.size
+
+    # Crop to the top-left quadrant of the bottom_label
+    quadrant_width = bottom_label.width // 2
+    quadrant_height = bottom_label.height // 2
+    maz_qr = bottom_label.crop((0, 0, quadrant_width, quadrant_height))
+
+    # Save the cropped image for visual inspection
+    output_path = os.path.join(os.path.dirname(image_path), "testing/cropped_maz_qr.jpg")
+    maz_qr.save(output_path)
+    print(f"DEBUG: Cropped QR image saved to: {output_path}")
+
+    # Use pyzbar's decode function to get the data from the QR code
+    decoded_objects = qr_decode(maz_qr)
+
+    # Return the data from the first QR code found (assuming there's only one)
+    if decoded_objects:
+        return decoded_objects[0].data.decode('utf-8')
+    else:
+        return None
+
+
+def extract_text(request, image_id):
+    if request.method == 'POST':
+        try:
+            image_instance = Image.objects.get(id=image_id)
+            image_path = image_instance.image.path  # Replace `image` with your image field name
+            image = PILImage.open(image_path)
+            extracted_text = pytesseract.image_to_string(image)
+
+            qr_data = extract_qr_data(image_path)
+
+            if qr_data:
+                extracted_text += "\n QR Data:" + qr_data
+
+            return JsonResponse({'extracted_text': extracted_text}, status=200)
+        except Image.DoesNotExist:
+            return JsonResponse({'error': 'Image not found'}, status=404)
