@@ -12,7 +12,9 @@ from PIL import Image as PILImage
 from pyzbar.pyzbar import decode as qr_decode
 import pytesseract
 import requests
+import numpy as np
 import os
+import cv2
 
 from .forms import MoodboardForm, ImageForm
 from .models import Moodboard, Image
@@ -218,40 +220,85 @@ def not_listed_items(request):
     moodboards = Moodboard.objects.filter(listed=False)
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
 
+def locate_qr_codes(image_path):
+    image = PILImage.open(image_path)
+    decoded_objects = decode(image)
+
+    qr_locations = []
+    for obj in decoded_objects:
+        if obj.type == "QRCODE":
+            qr_locations.append(obj.polygon)  # polygon gives the four corners of the QR code
+
+    return qr_locations, decoded_objects
+
+def visualise_qr_codes(image_path):
+    image = cv2.imread(image_path)
+
+    # Decode the QR codes in the image
+    detected_qr_codes = qr_decode(image)
+
+    for qr_code in detected_qr_codes:
+        points = qr_code.polygon
+
+        # Extract x and y coordinates from the points
+        x_coords = [point.x for point in points]
+        y_coords = [point.y for point in points]
+
+        # Determine corners of the bounding box
+        top_left = (max(0, min(x_coords) - 50), max(0, min(y_coords) - 50))
+        bottom_right = (min(image.shape[1], max(x_coords) + 50), min(image.shape[0], max(y_coords) + 50))
+
+        cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
+
+    # Construct the output path using the directory of the input image
+    directory = os.path.dirname(image_path)
+    output_path = os.path.join(directory, "testing/qr_visual.jpg")
+
+    cv2.imwrite(output_path, image)
+    print("DEBUG: QR Visualisation saved to: "+output_path)
+
+
 
 def extract_qr_data(image_path):
-    image = PILImage.open(image_path)
+    # Load the image with OpenCV
+    image = cv2.imread(image_path)
     output_path = os.path.join(os.path.dirname(image_path), "testing/main_image.jpg")
-    image.save(output_path)
-    print(f"DEBUG: Main image saved to: {output_path}")
-    # Crop to the bottom half to focus on the label with the QR code
-    half_height = image.height // 2
-    bottom_label = image.crop((0, half_height, image.width, image.height))
-    output_path = os.path.join(os.path.dirname(image_path), "testing/bottom_label.jpg")
-    bottom_label.save(output_path)
-    print(f"DEBUG: Cropped bottom label image saved to: {output_path}")
+    cv2.imwrite(output_path, image)
+    
+    # Visualize detected QR codes
+    detected_qr_codes = qr_decode(image)
+    for qr_code in detected_qr_codes:
+        points = qr_code.polygon
+        if len(points) == 4:
+            pts = np.array([list(p) for p in points])
+            cv2.polylines(image, [pts], True, (0, 255, 0), 2)
+    
+    cv2.imwrite(output_path, image)
+    print(f"DEBUG: Main image with visualized QR codes saved to: {output_path}")
 
-    bottom_width, bottom_height, = bottom_label.size
+    # Crop the detected QR codes and decode
+    qr_data_list = []
+    for qr_code in detected_qr_codes:
+        points = qr_code.polygon
+        
+        x_coords = [point.x for point in points]
+        y_coords = [point.y for point in points]
+        
+        top_left = (min(x_coords), min(y_coords))
+        bottom_right = (max(x_coords), max(y_coords))
+        
+        cropped_image = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+        qr_data_list.append(decode_qr_from_cv2(cropped_image))
+    
+    return qr_data_list
 
-    # Crop to the top-left quadrant of the bottom_label
-    quadrant_width = bottom_label.width // 2
-    quadrant_height = bottom_label.height // 2
-    maz_qr = bottom_label.crop((0, 0, quadrant_width, quadrant_height))
-
-    # Save the cropped image for visual inspection
-    output_path = os.path.join(os.path.dirname(image_path), "testing/cropped_maz_qr.jpg")
-    maz_qr.save(output_path)
-    print(f"DEBUG: Cropped QR image saved to: {output_path}")
-
-    # Use pyzbar's decode function to get the data from the QR code
-    decoded_objects = qr_decode(maz_qr)
-
-    # Return the data from the first QR code found (assuming there's only one)
+def decode_qr_from_cv2(cv2_image):
+    pil_image = PILImage.fromarray(cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB))
+    decoded_objects = qr_decode(pil_image)
     if decoded_objects:
         return decoded_objects[0].data.decode('utf-8')
     else:
         return None
-
 
 def extract_text(request, image_id):
     if request.method == 'POST':
@@ -264,7 +311,7 @@ def extract_text(request, image_id):
             qr_data = extract_qr_data(image_path)
 
             if qr_data:
-                extracted_text += "\n QR Data:" + qr_data
+                extracted_text += "\n QR Data: " + ', '.join(map(str, qr_data))
 
             return JsonResponse({'extracted_text': extracted_text}, status=200)
         except Image.DoesNotExist:
