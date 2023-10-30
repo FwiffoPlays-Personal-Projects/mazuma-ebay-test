@@ -13,7 +13,7 @@
 <body>    
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="{% url 'moodboard:index' %}">Mazuma eBay Pictures</a>
-    <p class="navbar-brand text-danger">TEST BUILD 29/10/2023</p>
+    <p class="navbar-brand text-danger">TEST BUILD 30/10/2023</p>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -64,6 +64,27 @@
     {% block content %}
     {% endblock %}
   </div>
+
+<!-- Start of Footer -->
+<footer class="bg-light text-center text-lg-start">
+  <div class="container p-4">
+    <h6 class="text-uppercase mb-4">Acknowledgements</h6>
+    <p class="mb-1">
+      This web app was developed by the Mazuma Mobile team.
+    </p>
+    <ul class="list-unstyled">
+      <li class="mb-1"><strong>Planning, testing and development:</strong> Harrison Brookes-Boon</li>
+      <li class="mb-1"><strong>Systems support, consulting, testing:</strong> Vaughn Lewis</li>
+      <li class="mb-1"><strong>Consulting, testing:</strong> Gemma Gibson</li>
+    </ul>
+  </div>
+  <div class="text-center p-3 bg-secondary text-light">
+    &copy; 2023 Mazuma Mobile. All rights reserved.
+  </div>
+</footer>
+<!-- End of Footer -->
+
+
   <!-- Add Bootstrap JavaScript and jQuery -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>

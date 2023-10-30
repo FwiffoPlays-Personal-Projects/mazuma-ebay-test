@@ -259,19 +259,24 @@ def visualise_qr_codes(image_path):
 
 
 
-def extract_qr_data(image_path):
+def extract_qr_data(image_path, padding=25):
     # Load the image with OpenCV
     image = cv2.imread(image_path)
     output_path = os.path.join(os.path.dirname(image_path), "testing/main_image.jpg")
-    cv2.imwrite(output_path, image)
     
     # Visualize detected QR codes
     detected_qr_codes = qr_decode(image)
     for qr_code in detected_qr_codes:
         points = qr_code.polygon
         if len(points) == 4:
-            pts = np.array([list(p) for p in points])
-            cv2.polylines(image, [pts], True, (0, 255, 0), 2)
+            x_coords = [point.x for point in points]
+            y_coords = [point.y for point in points]
+            
+            # Adjust bounding box with padding for visualization
+            top_left_vis = (max(min(x_coords) - padding, 0), max(min(y_coords) - padding, 0))
+            bottom_right_vis = (min(max(x_coords) + padding, image.shape[1]), min(max(y_coords) + padding, image.shape[0]))
+            
+            cv2.rectangle(image, top_left_vis, bottom_right_vis, (0, 255, 0), 2)
     
     cv2.imwrite(output_path, image)
     print(f"DEBUG: Main image with visualized QR codes saved to: {output_path}")
@@ -284,10 +289,11 @@ def extract_qr_data(image_path):
         x_coords = [point.x for point in points]
         y_coords = [point.y for point in points]
         
-        top_left = (min(x_coords), min(y_coords))
-        bottom_right = (max(x_coords), max(y_coords))
+        # Get bounding box with padding for cropping
+        top_left_crop = (max(min(x_coords) - padding, 0), max(min(y_coords) - padding, 0))
+        bottom_right_crop = (min(max(x_coords) + padding, image.shape[1]), min(max(y_coords) + padding, image.shape[0]))
         
-        cropped_image = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+        cropped_image = image[top_left_crop[1]:bottom_right_crop[1], top_left_crop[0]:bottom_right_crop[0]]
         qr_data_list.append(decode_qr_from_cv2(cropped_image))
     
     return qr_data_list
