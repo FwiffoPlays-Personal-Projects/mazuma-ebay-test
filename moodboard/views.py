@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 #import cloudinary.uploader
 from django.db.models import Q
-from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
+from django.http import HttpResponseForbidden, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -10,10 +12,13 @@ from datetime import datetime
 from io import BytesIO
 from PIL import Image as PILImage
 from pyzbar.pyzbar import decode as qr_decode
+import base64
 import pytesseract
 import requests
 import numpy as np
 import os
+import json
+import re
 import cv2
 
 from .forms import MoodboardForm, ImageForm
@@ -220,52 +225,22 @@ def not_listed_items(request):
     moodboards = Moodboard.objects.filter(listed=False)
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
 
-def locate_qr_codes(image_path):
-    image = PILImage.open(image_path)
-    decoded_objects = decode(image)
+def pil_to_cv2(image):
+    """Convert PIL Image to OpenCV Image."""
+    return np.array(image)
 
-    qr_locations = []
-    for obj in decoded_objects:
-        if obj.type == "QRCODE":
-            qr_locations.append(obj.polygon)  # polygon gives the four corners of the QR code
+def cv2_to_pil(image):
+    """Convert OpenCV Image to PIL Image."""
+    return Image.fromarray(image)
 
-    return qr_locations, decoded_objects
-
-def visualise_qr_codes(image_path):
-    image = cv2.imread(image_path)
-
-    # Decode the QR codes in the image
-    detected_qr_codes = qr_decode(image)
-
-    for qr_code in detected_qr_codes:
-        points = qr_code.polygon
-
-        # Extract x and y coordinates from the points
-        x_coords = [point.x for point in points]
-        y_coords = [point.y for point in points]
-
-        # Determine corners of the bounding box
-        top_left = (max(0, min(x_coords) - 50), max(0, min(y_coords) - 50))
-        bottom_right = (min(image.shape[1], max(x_coords) + 50), min(image.shape[0], max(y_coords) + 50))
-
-        cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
-
-    # Construct the output path using the directory of the input image
-    directory = os.path.dirname(image_path)
-    output_path = os.path.join(directory, "testing/qr_visual.jpg")
-
-    cv2.imwrite(output_path, image)
-    print("DEBUG: QR Visualisation saved to: "+output_path)
-
-
-
-def extract_qr_data(image_path, padding=25):
+def extract_qr_data(pil_image, padding=25):
+    """Extracts all QR code data within an image and returns the result as a"""
     # Load the image with OpenCV
-    image = cv2.imread(image_path)
-    output_path = os.path.join(os.path.dirname(image_path), "testing/main_image.jpg")
+    image = pil_to_cv2(pil_image)
+    output_path = os.path.join(settings.MEDIA_ROOT, "testing", "item_images", "main_image.jpg")
     
     # Visualize detected QR codes
-    detected_qr_codes = qr_decode(image)
+    detected_qr_codes = qr_decode(pil_image)
     for qr_code in detected_qr_codes:
         points = qr_code.polygon
         if len(points) == 4:
@@ -314,11 +289,58 @@ def extract_text(request, image_id):
             image = PILImage.open(image_path)
             extracted_text = pytesseract.image_to_string(image)
 
-            qr_data = extract_qr_data(image_path)
-
+            qr_data = extract_qr_data(image)
+            
             if qr_data:
                 extracted_text += "\n QR Data: " + ', '.join(map(str, qr_data))
 
             return JsonResponse({'extracted_text': extracted_text}, status=200)
         except Image.DoesNotExist:
             return JsonResponse({'error': 'Image not found'}, status=404)
+
+def base64_to_image(base64_string):
+    img_data = base64.b64decode(base64_string)
+    return PILImage.open(BytesIO(img_data))
+
+
+
+@csrf_exempt
+def extract_stock_id(request):
+    pattern = r'MAZ\d{10}'
+    if request.method == 'POST':
+        print("DEBUG: POST request received for /extract_stock_id/")
+        try:
+            data = json.loads(request.body)
+            base64_string = data.get('image')
+            if not base64_string:
+                print("DEBUG: No image data provided.")
+                return HttpResponseBadRequest("No image data provided.")
+
+            
+            pil_img = base64_to_image(base64_string)
+            qr_data = extract_qr_data(pil_img)
+            
+            if not qr_data:  # No QR data extracted
+                print("DEBUG: No QR data found.")
+                return JsonResponse({"error": "No QR data found."}, status=400)
+            else:
+                print("DEBUG: Extracted QR Data: ", qr_data)  # Add this to check the QR data
+
+            qr_data_str = ', '.join(filter(None, qr_data))
+            match = re.search(pattern, qr_data_str)
+            if match:
+                stock_id = match.group(0)
+                print("DEBUG: Found Stock ID: ", stock_id)
+                return JsonResponse({'stock_id': stock_id})
+            else:
+                print("ERROR: No Stock ID Found in QR Data: ", qr_data_str)  # Add the QR data here for debugging
+                return JsonResponse({"error": "No Stock ID found in QR data."}, status=400)
+        except json.JSONDecodeError as e:
+            print("DEBUG: Invalid JSON data.")
+            return HttpResponseBadRequest("Invalid JSON data.")
+        except Exception as e:
+            print(str(e))
+            return HttpResponseBadRequest(str(e))
+    else:
+        print("DEBUG: Invalid request method.")
+        return HttpResponseBadRequest("Invalid request method.")

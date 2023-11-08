@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
-#import cloudinary
+# import cloudinary
 
 if os.path.isfile('env.py'):
     import env
@@ -34,14 +34,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 if 'DEVELOPMENT' in os.environ:
     STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
     DEBUG = True
-    ALLOWED_HOSTS = ['*'] # Allows all hosts, should only be used for development
-    
+    ALLOWED_HOSTS = ['*']  # Allows all hosts, should only be used for development
+
 else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     DEBUG = False
     ALLOWED_HOSTS = ['mazuma-ebay-test-0d9c445e584b.herokuapp.com', 'localhost']
 
-#ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -151,16 +151,18 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-#STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticHashedCloudinaryStorage'
+# STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticHashedCloudinaryStorage'
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # Set max data size for image strings to 10MB
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.fallback.FallbackStorage'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
-#DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

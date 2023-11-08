@@ -71,16 +71,26 @@
         {% endfor %}
     </div>
 </div>
-<div id="imageModal" class="modal" role="dialog" aria-labelledby="imageModalLabel">
+
+<div id="imageModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header d-flex align-items-center justify-content-between p-2">
-                <button class="close ml-2" aria-label="Close" aria-hidden="true">&times;</button>
-                <button onclick="" class="btn btn-secondary mr-2" id="modalDownloadButton"><i class="fas fa-download"></i></button>
+                <!-- Update the close button to include Bootstrap data-dismiss attribute -->
+                <button type="button" class="close ml-2" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <!-- Ensure the download button has functionality to download the image -->
+                <button onclick="downloadImage()" class="btn btn-secondary mr-2" id="modalDownloadButton">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button onclick="extractStockIdFromImage()" class="btn btn-secondary mr-2" id="extractButton">
+                    <i class="fas fa-qrcode"></i> Extract Stock ID
+                </button>
             </div>
             
-            <div class="modal-body d-flex justify-content-center">
-                <img class="img-fluid" id="modalImg">
+            <div class="modal-body">
+                <img class="img-fluid" id="modalImg" alt="Modal Image">
             </div>
         </div>
     </div>
@@ -89,9 +99,27 @@
 
 
 
+
 {% csrf_token %}
 <script>
-    var csrf_token = '{{ csrf_token }}';
+    function getCsrfToken() {
+        let csrfToken = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 'csrftoken='.length) === 'csrftoken=') {
+                    csrfToken = decodeURIComponent(cookie.substring('csrftoken='.length));
+                    break;
+                }
+            }
+        }
+        return csrfToken;
+    }
+    
+    var csrf_token = getCsrfToken();
+
+
     function openModalImage(imgElement) {
         var modal = document.getElementById("imageModal");
         var modalImg = document.getElementById("modalImg");
@@ -164,6 +192,64 @@
         });
     });
 
+    function getBase64Image(imgElement) {
+        let canvas = document.createElement("canvas");
+        canvas.width = imgElement.naturalWidth;
+        canvas.height = imgElement.naturalHeight;
+
+        let ctx = canvas.getContext("2d");
+        ctx.drawImage(imgElement, 0, 0);
+
+        let dataURL = canvas.toDataURL("image/jpeg"); // You can also use "image/png"
+        return dataURL.replace(/^data:image\/(png|jpeg);base64,/, "");
+    }
+    
+    function extractStockIdFromImage() {
+        let img = document.getElementById("modalImg");
+        let imgData = getBase64Image(img);
+
+        fetch("/extract_stock_id/", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify({image: imgData})
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.json().then(errorData => {
+                    // Server responded with a non-200 status code but still sent JSON data
+                    throw new Error(`Error: ${errorData.error || 'Server error'}`);
+                }).catch(() => {
+                    // Server responded with a non-200 status code and no JSON
+                    throw new Error('Server responded with a non-200 status code and no readable error message');
+                });
+            }
+        })
+        .then(data => {
+            if (data.stock_id) {
+                let userConfirmation = confirm(`Stock ID detected: ${data.stock_id}. Is this correct?`);
+                if (userConfirmation) {
+                    console.log("User confirmed stock ID: "+data.stock_id);
+                } else {
+                    alert("Please retake the image.");
+                }
+            } else if (data.error) {
+                // Handle case where data contains an error property
+                alert(`Error detected: ${data.error}`);
+            } else {
+                // Handle other cases where response is OK but data is not as expected
+                alert("No stock ID detected. Please retake the image.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred while trying to process the image. Please try again.");
+        });
+    }
 </script>
 {% else %}
       <h2 class="my-4">You must be signed in to view this page.</h2>

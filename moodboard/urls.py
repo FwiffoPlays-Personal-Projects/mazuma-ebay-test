@@ -17,4 +17,5 @@ urlpatterns = [
     path('listed/', views.listed_items, name='listed_items'),
     path('not-listed/', views.not_listed_items, name='not_listed_items'),
     path('extract_text/<int:image_id>/', views.extract_text, name='extract_text'),
+    path('extract_stock_id/', views.extract_stock_id, name='extract_stock_id'),
 ]

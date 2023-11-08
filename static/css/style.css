@@ -11,23 +11,24 @@
     background-color: rgba(0, 0, 0, 0.4);
   }
   
-.modal-content {
-  background-color: #fefefe;
-  margin: 2em auto;
-  padding: 20px;
-  border: 1px solid #888;
-  max-width: 80%;
-  width: auto;
-  max-height: 80%;
-  height: auto;
+.modal-dialog {
+  margin: auto;
 }
   
-.modal-dialog {
-  max-width: 90%;
+.modal-content {
+  height: auto; /* Allow the content to size based on the image */
+  display: flex; /* Use flexbox for centering */
+  justify-content: center; /* Align items horizontally */
+}
+  
+.modal-body {
+  padding: 1rem; /* Add some padding around the image */
 }
 
-.modal-content {
-  position: relative;
+#modalImg {
+  max-height: 90vh; /* Limit the image height to 90% of the viewport height */
+  max-width: 100%; /* Limit the image width to 100% of its container */
+  object-fit: contain; /* Make sure the image is scaled correctly */
 }
 
 .close {
