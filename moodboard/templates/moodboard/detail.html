@@ -185,10 +185,6 @@
                 },
             })
             .then(response => response.json())
-            .then(data => {
-                // Do something with extracted text
-                console.log(data.extracted_text);
-            });
         });
     });
 
@@ -204,6 +200,27 @@
         return dataURL.replace(/^data:image\/(png|jpeg);base64,/, "");
     }
     
+    function setStockID(moodboard_id, stock_id) {
+        fetch(`/set_stock_id/${moodboard_id}/${stock_id}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf_token
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                } else {
+                    window.location.href = `/detail/${moodboard_id}/`; // Redirect after successful POST
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+            });
+    }
+
+
     function extractStockIdFromImage() {
         let img = document.getElementById("modalImg");
         let imgData = getBase64Image(img);
@@ -231,9 +248,10 @@
         })
         .then(data => {
             if (data.stock_id) {
-                let userConfirmation = confirm(`Stock ID detected: ${data.stock_id}. Is this correct?`);
+                let userConfirmation = confirm(`Stock ID detected: ${data.stock_id}. Press OK to set stock ID`);
                 if (userConfirmation) {
                     console.log("User confirmed stock ID: "+data.stock_id);
+                    setStockID({{moodboard.id}}, data.stock_id);
                 } else {
                     alert("Please retake the image.");
                 }

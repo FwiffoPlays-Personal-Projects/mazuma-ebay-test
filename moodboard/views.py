@@ -215,6 +215,17 @@ def toggle_listed(request, moodboard_id):
     else:
         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
+def set_stock_id(request, moodboard_id, stock_id):
+    moodboard = get_object_or_404(Moodboard, pk=moodboard_id)
+
+    if request.user == moodboard.user or request.user.is_staff:
+        moodboard.stock_id = stock_id
+
+        moodboard.save()
+        return JsonResponse({'stock_id': stock_id}, status=200)
+    else:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
 
 def listed_items(request):
     moodboards = Moodboard.objects.filter(listed=True)
@@ -308,7 +319,6 @@ def base64_to_image(base64_string):
 def extract_stock_id(request):
     pattern = r'MAZ\d{10}'
     if request.method == 'POST':
-        print("DEBUG: POST request received for /extract_stock_id/")
         try:
             data = json.loads(request.body)
             base64_string = data.get('image')
