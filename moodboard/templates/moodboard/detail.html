@@ -15,7 +15,7 @@
                     <p class="text-muted small">Created: {{ moodboard.created_at }} - Edited: {{ moodboard.updated_at }}</p>
                     <div class="d-flex justify-content-start align-items-center mb-3">
                         {% if moodboard.listed %}
-                            <span class="badge bg-success">Listed - {{ moodboard.listed_at }}</span>
+                            <span class="badge bg-success">Listed on {{ moodboard.listed_at }} by {{moodboard.listed_by}}</span>
                         {% else %}
                             <span class="badge bg-danger">Not Listed</span>
                         {% endif %}

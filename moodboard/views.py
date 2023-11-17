@@ -211,6 +211,7 @@ def toggle_listed(request, moodboard_id):
                 # If toggled to true, update the listed_date
         if moodboard.listed:
             moodboard.listed_at = datetime.now()
+            moodboard.listed_by = request.user.username
 
         moodboard.save()
         return redirect('moodboard:detail', pk=moodboard.id)
@@ -316,6 +317,7 @@ def decode_qr_from_cv2(cv2_image):
 def base64_to_image(base64_string):
     img_data = base64.b64decode(base64_string)
     return PILImage.open(BytesIO(img_data))
+
 
 def preprocess_image(pil_img):
 

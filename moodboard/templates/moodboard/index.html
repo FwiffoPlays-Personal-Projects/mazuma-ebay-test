@@ -18,7 +18,7 @@
               <span class="badge bg-secondary">{{ moodboard.stock_id }}</span>
               <p>{{ moodboard.updated_at }}</p>
               {% if moodboard.listed %}
-                <h5 class="bg-success">Listed - {{ moodboard.listed_at }}</h5>
+                <h5 class="bg-success">Listed on {{ moodboard.listed_at }} by {{ moodboard.listed_by }}</h5>
               {% else %}
                 <h5 class="bg-danger">Not Listed</h5>
               {% endif %}
