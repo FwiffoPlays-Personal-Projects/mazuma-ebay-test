@@ -402,7 +402,8 @@ def extract_stock_id(request):
 
             
             pil_img = base64_to_image(base64_string)
-            qr_data = extract_qr_data(pil_img)
+            enhanced_image = preprocess_image(pil_img)
+            qr_data = extract_qr_data(enhanced_image)
             
             if not qr_data:  # No QR data extracted
                 print("DEBUG: No QR data found.")
