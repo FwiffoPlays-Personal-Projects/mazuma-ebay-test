@@ -61,7 +61,6 @@
                 <div class="card mb-4 position-relative">
                     <img src="{{ image.image.url }}" loading="lazy" class="card-img-top" alt="Item image" onclick="openModalImage(this)" id="image-{{ forloop.counter }}" aria-hidden="true">
                     <button onclick="downloadImage('{{ image.image.url }}')" class="btn btn-secondary position-absolute" style="top: 10px; right: 10px;"><i class="fas fa-download"></i></button>
-                    <button class="extract-text" data-image-id="{{ image.id }}">Extract Text</button>
                 </div>
             </div>
         {% empty %}
@@ -84,9 +83,22 @@
                 <button onclick="downloadImage()" class="btn btn-secondary mr-2" id="modalDownloadButton">
                     <i class="fas fa-download"></i>
                 </button>
+                <button onclick="extractTextFromImage()" class="btn btn-secondary mr-2" data-image-id="{{ image.id }}">
+                    <span>Extract Text</span>
+                    <div id="textSpinner" class="loading-spinner" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden"></span>
+                        </div>
+                    </div>
+                </button>
                 <button onclick="extractStockIdFromImage()" class="btn btn-secondary mr-2" id="extractButton">
                     <i class="fas fa-qrcode"></i> Extract Stock ID
-                </button>
+                    <div id="stockIDSpinner" class="loading-spinner" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden"></span>
+                        </div>
+                    </div>
+                </button>                
             </div>
             
             <div class="modal-body">
@@ -172,6 +184,7 @@
         xhr.send();
     }
 
+    
 
     // Attach click event to all buttons with class 'extract-text'
     document.querySelectorAll('.extract-text').forEach(button => {
@@ -188,6 +201,7 @@
         });
     });
 
+
     function getBase64Image(imgElement) {
         let canvas = document.createElement("canvas");
         canvas.width = imgElement.naturalWidth;
@@ -200,6 +214,7 @@
         return dataURL.replace(/^data:image\/(png|jpeg);base64,/, "");
     }
     
+
     function setStockID(moodboard_id, stock_id) {
         fetch(`/set_stock_id/${moodboard_id}/${stock_id}/`, {
                 method: 'POST',
@@ -221,9 +236,93 @@
     }
 
 
+    function setDescription(moodboard_id, description) {
+    fetch(`/set_description/${moodboard_id}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token
+        },
+        body: JSON.stringify({ description: description }) // Send description in request body
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        } else {
+            window.location.href = `/detail/${moodboard_id}/`; // Redirect after successful POST
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+    });
+}
+
+    
+
+    function extractTextFromImage() {
+        let img = document.getElementById("modalImg");
+        let imgData = getBase64Image(img);
+        let loadingSpinner = document.getElementById("textSpinner");
+
+        // Show the spinner
+        loadingSpinner.style.display = 'block';
+
+        fetch("/extract_text/", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token,
+            },
+            body: JSON.stringify({image: imgData})
+        })
+        .then(response => {
+            // Hide the spinner when we get a response
+            loadingSpinner.style.display = 'none';
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.json().then(errorData => {
+                    // Server responded with a non-200 status code but still sent JSON data
+                    throw new Error(`Error: ${errorData.error || 'Server error'}`);
+                }).catch(() => {
+                    // Server responded with a non-200 status code and no JSON
+                    throw new Error('Server responded with a non-200 status code and no readable error message');
+                });
+            }
+        })
+        .then(data => {
+            if (data.extracted_text) {
+                let userConfirmation = confirm(`Extracted text: ${data.extracted_text}. Press OK to set description`);
+                if (userConfirmation) {
+                    console.log("User confirmed text: "+data.extracted_text);
+                    setDescription({{moodboard.id}}, data.extracted_text);
+                } else {
+                    alert("Please retake the image.");
+                }
+            } else if (data.error) {
+                // Handle case where data contains an error property
+                alert(`Error detected: ${data.error}`);
+            } else {
+                // Handle other cases where response is OK but data is not as expected
+                alert("No stock ID detected. Please retake the image.");
+            }
+        })
+        .catch(error => {
+            // Hide the spinner if there's an error
+            loadingSpinner.style.display = 'none';
+            console.error('Error:', error);
+            alert("An error occurred while trying to process the image. Please try again.");
+        });
+    }
+
+
     function extractStockIdFromImage() {
         let img = document.getElementById("modalImg");
         let imgData = getBase64Image(img);
+        let loadingSpinner = document.getElementById("stockIDSpinner");
+
+        // Show the spinner
+        loadingSpinner.style.display = 'block';
 
         fetch("/extract_stock_id/", {
             method: 'POST',
@@ -234,6 +333,8 @@
             body: JSON.stringify({image: imgData})
         })
         .then(response => {
+            // Hide the spinner when we get a response
+            loadingSpinner.style.display = 'none';
             if (response.ok) {
                 return response.json();
             } else {
@@ -264,6 +365,8 @@
             }
         })
         .catch(error => {
+            // Hide the spinner if there's an error
+            loadingSpinner.style.display = 'none';
             console.error('Error:', error);
             alert("An error occurred while trying to process the image. Please try again.");
         });

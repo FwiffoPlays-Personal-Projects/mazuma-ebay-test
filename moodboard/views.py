@@ -11,6 +11,7 @@ from zipfile import ZipFile
 from datetime import datetime
 from io import BytesIO
 from PIL import Image as PILImage
+from PIL import ImageEnhance
 from pyzbar.pyzbar import decode as qr_decode
 import base64
 import pytesseract
@@ -63,6 +64,7 @@ def create_moodboard(request):
     }
 
     return render(request, "moodboard/create_moodboard.html", context)
+
 
 @login_required
 def edit_moodboard(request, moodboard_id):
@@ -215,6 +217,7 @@ def toggle_listed(request, moodboard_id):
     else:
         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
+
 def set_stock_id(request, moodboard_id, stock_id):
     moodboard = get_object_or_404(Moodboard, pk=moodboard_id)
 
@@ -227,6 +230,21 @@ def set_stock_id(request, moodboard_id, stock_id):
         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
 
+@csrf_exempt
+def set_description(request, moodboard_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        moodboard = get_object_or_404(Moodboard, pk=moodboard_id)
+        description = data.get('description', '')
+
+        moodboard.description = description
+        moodboard.save()
+
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
 def listed_items(request):
     moodboards = Moodboard.objects.filter(listed=True)
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
@@ -236,53 +254,55 @@ def not_listed_items(request):
     moodboards = Moodboard.objects.filter(listed=False)
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
 
+
 def pil_to_cv2(image):
     """Convert PIL Image to OpenCV Image."""
     return np.array(image)
+
 
 def cv2_to_pil(image):
     """Convert OpenCV Image to PIL Image."""
     return Image.fromarray(image)
 
+
 def extract_qr_data(pil_image, padding=25):
-    """Extracts all QR code data within an image and returns the result as a"""
+    """Extracts QR code data from an image, visualizes the codes, and returns the data."""
     # Load the image with OpenCV
     image = pil_to_cv2(pil_image)
-    output_path = os.path.join(settings.MEDIA_ROOT, "testing", "item_images", "main_image.jpg")
     
-    # Visualize detected QR codes
+    # Detect and decode QR codes
     detected_qr_codes = qr_decode(pil_image)
+    qr_data_list = []
+
     for qr_code in detected_qr_codes:
         points = qr_code.polygon
+        
         if len(points) == 4:
+            # Convert polygon points to x and y coordinates
             x_coords = [point.x for point in points]
             y_coords = [point.y for point in points]
             
-            # Adjust bounding box with padding for visualization
-            top_left_vis = (max(min(x_coords) - padding, 0), max(min(y_coords) - padding, 0))
-            bottom_right_vis = (min(max(x_coords) + padding, image.shape[1]), min(max(y_coords) + padding, image.shape[0]))
+            # Calculate bounding box with padding for cropping and visualization
+            top_left = (max(min(x_coords) - padding, 0), max(min(y_coords) - padding, 0))
+            bottom_right = (min(max(x_coords) + padding, image.shape[1]), min(max(y_coords) + padding, image.shape[0]))
             
-            cv2.rectangle(image, top_left_vis, bottom_right_vis, (0, 255, 0), 2)
-    
-    cv2.imwrite(output_path, image)
-    print(f"DEBUG: Main image with visualized QR codes saved to: {output_path}")
+            # Visualize the bounding box on the image
+            cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
+            
+            # Crop and decode QR code data
+            cropped_image = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+            decoded_data = decode_qr_from_cv2(cropped_image)
+            if decoded_data:
+                qr_data_list.append(decoded_data)
 
-    # Crop the detected QR codes and decode
-    qr_data_list = []
-    for qr_code in detected_qr_codes:
-        points = qr_code.polygon
-        
-        x_coords = [point.x for point in points]
-        y_coords = [point.y for point in points]
-        
-        # Get bounding box with padding for cropping
-        top_left_crop = (max(min(x_coords) - padding, 0), max(min(y_coords) - padding, 0))
-        bottom_right_crop = (min(max(x_coords) + padding, image.shape[1]), min(max(y_coords) + padding, image.shape[0]))
-        
-        cropped_image = image[top_left_crop[1]:bottom_right_crop[1], top_left_crop[0]:bottom_right_crop[0]]
-        qr_data_list.append(decode_qr_from_cv2(cropped_image))
+    # Write the visualized image to disk only if there are detected QR codes
+    if detected_qr_codes:
+        output_path = os.path.join(settings.MEDIA_ROOT, "testing", "main_image.jpg")
+        cv2.imwrite(output_path, image)
+        # print(f"DEBUG: Main image with visualized QR codes saved to: {output_path}")
     
     return qr_data_list
+
 
 def decode_qr_from_cv2(cv2_image):
     pil_image = PILImage.fromarray(cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB))
@@ -292,27 +312,81 @@ def decode_qr_from_cv2(cv2_image):
     else:
         return None
 
-def extract_text(request, image_id):
-    if request.method == 'POST':
-        try:
-            image_instance = Image.objects.get(id=image_id)
-            image_path = image_instance.image.path  # Replace `image` with your image field name
-            image = PILImage.open(image_path)
-            extracted_text = pytesseract.image_to_string(image)
-
-            qr_data = extract_qr_data(image)
-            
-            if qr_data:
-                extracted_text += "\n QR Data: " + ', '.join(map(str, qr_data))
-
-            return JsonResponse({'extracted_text': extracted_text}, status=200)
-        except Image.DoesNotExist:
-            return JsonResponse({'error': 'Image not found'}, status=404)
 
 def base64_to_image(base64_string):
     img_data = base64.b64decode(base64_string)
     return PILImage.open(BytesIO(img_data))
 
+def preprocess_image(pil_img):
+
+    # Convert the image to grayscale to improve contrast for OCR
+    grayscale_image = pil_img.convert("L")
+
+    # Increase the contrast of the image
+    
+    contrast_enhancer = ImageEnhance.Contrast(grayscale_image)
+    enhanced_image = contrast_enhancer.enhance(2)
+
+    return enhanced_image
+
+@csrf_exempt
+def extract_text(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            base64_string = data.get('image')
+            if not base64_string:
+                print("DEBUG: No image data provided.")
+                return HttpResponseBadRequest("No image data provided.")
+            
+            pil_img = base64_to_image(base64_string)
+            enhanced_image = preprocess_image(pil_img)
+            #cv2_img = pil_to_cv2(pil_img)
+
+            # Convert image to grayscale
+            #gray_img = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2GRAY)
+
+            # Apply thresholding
+            #_, thresh_img = cv2.threshold(gray_img, 0, 200, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+            # Apply adaptive thresholding
+            #adaptive_thresh_img = cv2.adaptiveThreshold(gray_img, 240, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+            #                            cv2.THRESH_BINARY, 9, 1)
+
+            # Remove noise
+            #filtered_img = cv2.medianBlur(gray_img, 3)
+
+            # Apply dilation and erosion to merge text into meaningful lines/words.
+            #kernel = np.ones((5,5),np.uint8)
+            #img_dilation = cv2.dilate(filtered_img, kernel, iterations=1)
+            #img_erosion = cv2.erode(img_dilation, kernel, iterations=1)
+
+            # Save the preprocessed image (for testing purposes)
+            output_path = os.path.join(settings.MEDIA_ROOT, "testing", "preprocessed_text_image.jpg")
+            cv2.imwrite(output_path, pil_to_cv2(enhanced_image))
+
+            extracted_text = pytesseract.image_to_string(
+                enhanced_image,
+                lang='eng',
+                config='--oem 1'
+            )
+            
+            if not extracted_text:
+                print("DEBUG: No text found.")
+                return JsonResponse({"error": "No text found."}, status=400)
+            else:
+                print("DEBUG: Extracted Text: ", extracted_text)
+                return JsonResponse({'extracted_text': extracted_text})
+
+        except json.JSONDecodeError as e:
+            print("DEBUG: Invalid JSON data.")
+            return HttpResponseBadRequest("Invalid JSON data.")
+        except Exception as e:
+            print(str(e))
+            return HttpResponseBadRequest(str(e))
+    else:
+        print("DEBUG: Invalid request method.")
+        return HttpResponseBadRequest("Invalid request method.")
 
 
 @csrf_exempt
