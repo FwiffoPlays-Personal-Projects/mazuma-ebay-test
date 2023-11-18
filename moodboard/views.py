@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-#import cloudinary.uploader
 from django.db.models import Q
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
@@ -21,10 +20,19 @@ import os
 import json
 import re
 import cv2
+import time
 
 from .forms import MoodboardForm, ImageForm
 from .models import Moodboard, Image
 
+if os.path.isfile('env.py'):
+    import env
+
+if 'DEBUG' in os.environ:
+    DEBUG = True
+    print("DEBUG MODE ENABLED")
+else:
+    DEBUG = False
 
 def create_moodboard(request):
     """
@@ -333,12 +341,14 @@ def preprocess_image(pil_img):
 
 @csrf_exempt
 def extract_text(request):
+    start_time = time.time()  # Start time measurement
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             base64_string = data.get('image')
             if not base64_string:
-                print("DEBUG: No image data provided.")
+                if DEBUG:
+                    print("DEBUG: No image data provided.")
                 return HttpResponseBadRequest("No image data provided.")
             
             pil_img = base64_to_image(base64_string)
@@ -374,32 +384,41 @@ def extract_text(request):
             )
             
             if not extracted_text:
-                print("DEBUG: No text found.")
+                if DEBUG:
+                    print("DEBUG: No text found.")
                 return JsonResponse({"error": "No text found."}, status=400)
             else:
-                print("DEBUG: Extracted Text: ", extracted_text)
+                if DEBUG:
+                    end_time = time.time()  # End time measurement
+                    duration = end_time - start_time  # Calculate the duration
+                    print("DEBUG: Extracted Text: \n", extracted_text)
+                    print(f"DEBUG: extract_text took {duration} seconds.")
                 return JsonResponse({'extracted_text': extracted_text})
 
         except json.JSONDecodeError as e:
-            print("DEBUG: Invalid JSON data.")
+            if DEBUG:
+                print("DEBUG: Invalid JSON data.")
             return HttpResponseBadRequest("Invalid JSON data.")
         except Exception as e:
             print(str(e))
             return HttpResponseBadRequest(str(e))
     else:
-        print("DEBUG: Invalid request method.")
+        if DEBUG:
+            print("DEBUG: Invalid request method.")
         return HttpResponseBadRequest("Invalid request method.")
 
 
 @csrf_exempt
 def extract_stock_id(request):
+    start_time = time.time()  # Start time measurement
     pattern = r'MAZ\d{10}'
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             base64_string = data.get('image')
             if not base64_string:
-                print("DEBUG: No image data provided.")
+                if DEBUG:
+                    print("DEBUG: No image data provided.")
                 return HttpResponseBadRequest("No image data provided.")
 
             
@@ -408,26 +427,35 @@ def extract_stock_id(request):
             qr_data = extract_qr_data(enhanced_image)
             
             if not qr_data:  # No QR data extracted
-                print("DEBUG: No QR data found.")
+                if DEBUG:
+                    print("DEBUG: No QR data found.")
                 return JsonResponse({"error": "No QR data found."}, status=400)
             else:
-                print("DEBUG: Extracted QR Data: ", qr_data)  # Add this to check the QR data
+                if DEBUG:
+                    print("DEBUG: Extracted QR Data: ", qr_data)  # Add this to check the QR data
 
             qr_data_str = ', '.join(filter(None, qr_data))
             match = re.search(pattern, qr_data_str)
             if match:
                 stock_id = match.group(0)
-                print("DEBUG: Found Stock ID: ", stock_id)
+                if DEBUG:
+                    end_time = time.time()  # End time measurement
+                    duration = end_time - start_time  # Calculate the duration
+                    print("DEBUG: Found Stock ID: ", stock_id)
+                    print(f"DEBUG: extract_stock_id took {duration} seconds.")
                 return JsonResponse({'stock_id': stock_id})
             else:
+                
                 print("ERROR: No Stock ID Found in QR Data: ", qr_data_str)  # Add the QR data here for debugging
                 return JsonResponse({"error": "No Stock ID found in QR data."}, status=400)
         except json.JSONDecodeError as e:
-            print("DEBUG: Invalid JSON data.")
+            if DEBUG:
+                print("DEBUG: Invalid JSON data.")
             return HttpResponseBadRequest("Invalid JSON data.")
         except Exception as e:
             print(str(e))
             return HttpResponseBadRequest(str(e))
     else:
-        print("DEBUG: Invalid request method.")
+        if DEBUG:
+            print("DEBUG: Invalid request method.")
         return HttpResponseBadRequest("Invalid request method.")

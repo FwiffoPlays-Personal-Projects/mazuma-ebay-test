@@ -34,12 +34,13 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 if 'DEVELOPMENT' in os.environ:
     STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
     DEBUG = True
+    print("DEBUG MODE ENABLED")
     ALLOWED_HOSTS = ['*']  # Allows all hosts, should only be used for development
 
 else:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     DEBUG = False
-    ALLOWED_HOSTS = ['mazuma-ebay-test-0d9c445e584b.herokuapp.com', 'localhost']
+    ALLOWED_HOSTS = ['8000-fwiffoplays-mazumaebayt-u2vcca419sr.ws-eu106.gitpod.io/', 'localhost']
 
 # ALLOWED_HOSTS = ['*']
 

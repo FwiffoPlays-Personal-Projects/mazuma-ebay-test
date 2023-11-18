@@ -292,7 +292,7 @@
         })
         .then(data => {
             if (data.extracted_text) {
-                let userConfirmation = confirm(`Extracted text: ${data.extracted_text}. Press OK to set description`);
+                let userConfirmation = confirm(`Extracted text: \n${data.extracted_text}. Press OK to set description`);
                 if (userConfirmation) {
                     console.log("User confirmed text: "+data.extracted_text);
                     setDescription({{moodboard.id}}, data.extracted_text);
