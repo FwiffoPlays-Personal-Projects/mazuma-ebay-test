@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if user.is_authenticated %}
+<div>
+  <form class="d-flex" role="search" method="GET" action="{% url 'moodboard:index' %}">
+    <a class="btn btn-success" href="{% url 'moodboard:listed_items' %}" class="tab">Listed</a>
+    <a class="btn btn-danger" href="{% url 'moodboard:not_listed_items' %}" class="tab">Not Listed</a>
+    <input class="form-control me-2" name="q" type="search" placeholder="Search" aria-label="Search">
+    <button class="btn btn-outline-primary" type="submit">Search</button>
+  </form>
+</div>
 <div class="container">
-  {% if user.is_authenticated %}
   <h2 class="my-4">Items</h2>
   <div class="row">
     {% for moodboard in moodboards %}

@@ -31,6 +31,12 @@
   object-fit: contain; /* Make sure the image is scaled correctly */
 }
 
+#mainNav {
+  display: flex;
+  flex-direction: row;
+  margin-left: 1rem;
+}
+
 .close {
   cursor: pointer;
 }
@@ -47,3 +53,8 @@
   cursor: pointer;
 }
   
+@media (max-width: 768px) { /* Adjust this value based on your needs */
+  .navbar-text {
+    display: none;
+  }
+}

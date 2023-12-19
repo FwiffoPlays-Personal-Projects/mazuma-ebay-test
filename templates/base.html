@@ -10,56 +10,48 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <link rel="icon" href="{% static 'favicons/favicon.ico' %}" type="image/x-icon">
 
-  
+  <!-- Add Bootstrap JavaScript and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://kit.fontawesome.com/4c5880459d.js" crossorigin="anonymous"></script>
 </head>
 
 <body>    
-  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-    <a class="navbar-brand" href="{% url 'moodboard:index' %}">Mazuma eBay Pictures</a>
-    
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ml-auto">
+  <nav class="navbar navbar-light bg-light fixed-top">
+    <a class="navbar-brand" href="{% url 'moodboard:index' %}">
+      Mazuma eBay
+    </a>
         {% if user.is_authenticated %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'moodboard:index' %}">All Items</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'moodboard:listed_items' %}" class="tab">Listed</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'moodboard:not_listed_items' %}" class="tab">Not Listed</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'account_logout' %}">Logout</a>
-          </li>
-          <li class="nav-item">
+          <div id="mainNav">
+            <a class="nav-link" href="{% url 'moodboard:index' %}">
+              <i class="fas fa-search" style="color: rgb(112, 112, 112);"></i> <span class="navbar-text"> Find Items</span>
+            </a>            
             <a class="nav-link" href="{% url 'moodboard:create_moodboard' %}">
-              <i class="fa fa-plus"></i> Add Item
+              <i class="fa fa-plus" style="color: rgb(37, 184, 37);"></i> <span class="navbar-text"> Add Item</span>
             </a>
-          </li>
+            <a class="nav-link" href="{% url 'account_logout' %}">
+              <i class="fas fa-user" style="color: rgb(184, 37, 37);"></i> <span class="navbar-text"> Logout</span>
+            </a>
+          </div>
+          
         {% else %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'account_login' %}">Login</a>
-          </li>
+          <div id="mainNav">
+            <a class="nav-link" href="{% url 'account_login' %}">
+              <i class="fas fa-sign-in-alt"></i> <span class="navbar-text">Login</span>
+            </a>
+          </div>
         {% endif %}
-        <li class="nav-item">
-          <form class="d-flex" role="search" method="GET" action="{% url 'moodboard:index' %}">
-            <input class="form-control me-2" name="q" type="search" placeholder="Search" aria-label="Search">
-            <button class="btn btn-outline-primary" type="submit">Search</button>
-          </form>
-        </li>
       </ul>
     </div>
   </nav>
+
 
   <div class="container mt-4 flex-grow-1" style="padding-top: 70px;">
     {% if messages %}
         <div class="my-4">
           {% for message in messages %}
-            <div class="alert alert-dismissible {% if message.tags %} alert-{{ message.tags }}{% endif %}" role="alert">
+            <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">
               {{ message }}
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -81,6 +73,7 @@
       <li class="mb-1"><strong>Planning, testing and development:</strong> Harrison Brookes-Boon</li>
       <li class="mb-1"><strong>Systems support, consulting, testing:</strong> Vaughn Lewis</li>
       <li class="mb-1"><strong>Consulting, testing:</strong> Gemma Gibson</li>
+      <li class="mb-1"><strong>Testing:</strong> Finlay Taylor-Howe</li>
     </ul>
   </div>
   <div class="text-center p-3 bg-secondary text-light">
@@ -91,9 +84,6 @@
 
 
   <!-- Add Bootstrap JavaScript and jQuery -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <script src="https://kit.fontawesome.com/4c5880459d.js" crossorigin="anonymous"></script>
+
 </body>
 </html>
