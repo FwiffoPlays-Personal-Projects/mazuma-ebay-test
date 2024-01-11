@@ -26,7 +26,10 @@
           <div id="mainNav">
             <a class="nav-link" href="{% url 'moodboard:index' %}">
               <i class="fas fa-search" style="color: rgb(112, 112, 112);"></i> <span class="navbar-text"> Find Items</span>
-            </a>            
+            </a>
+            <a class="nav-link" href="{% url 'moodboard:not_listed_items' %}">
+              <i class="fas fa-times" style="color: rgb(184, 37, 37);"></i> <span class="navbar-text"> Not Listed</span>
+            </a>             
             <a class="nav-link" href="{% url 'moodboard:create_moodboard' %}">
               <i class="fa fa-plus" style="color: rgb(37, 184, 37);"></i> <span class="navbar-text"> Add Item</span>
             </a>

@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -166,7 +167,19 @@ def index(request):
     Displays a list of all Moodboard objects or a filtered list based on the
     search query.
     """
-    moodboards = get_queryset(request)
+    moodboard_list = get_queryset(request)
+    paginator = Paginator(moodboard_list, 10)  # Show 10 items per page
+
+    page = request.GET.get('page')
+    try:
+        moodboards = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        moodboards = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        moodboards = paginator.page(paginator.num_pages)
+
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
 
 
@@ -255,12 +268,34 @@ def set_description(request, moodboard_id):
 
 
 def listed_items(request):
-    moodboards = Moodboard.objects.filter(listed=True)
+    listed_items_list = Moodboard.objects.filter(listed=True).order_by('updated_at')
+    paginator = Paginator(listed_items_list, 10)  # Show 10 items per page
+
+    page = request.GET.get('page')
+    try:
+        moodboards = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        moodboards = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        moodboards = paginator.page(paginator.num_pages)
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
 
 
 def not_listed_items(request):
-    moodboards = Moodboard.objects.filter(listed=False)
+    not_listed_items_list = Moodboard.objects.filter(listed=False).order_by('updated_at')
+    paginator = Paginator(not_listed_items_list, 10)  # Show 10 items per page
+
+    page = request.GET.get('page')
+    try:
+        moodboards = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        moodboards = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        moodboards = paginator.page(paginator.num_pages)
     return render(request, "moodboard/index.html", {"moodboards": moodboards})
 
 
