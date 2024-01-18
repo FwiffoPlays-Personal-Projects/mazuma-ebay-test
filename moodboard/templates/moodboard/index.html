@@ -2,95 +2,176 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-<div>
-  <form class="d-flex" role="search" method="GET" action="{% url 'moodboard:index' %}">
-    <a class="btn btn-success" href="{% url 'moodboard:listed_items' %}" class="tab">Listed</a>
-    <a class="btn btn-danger" href="{% url 'moodboard:not_listed_items' %}" class="tab">Not Listed</a>
-    <input class="form-control me-2" name="q" type="search" placeholder="Search" aria-label="Search">
-    <button class="btn btn-outline-primary" type="submit">Search</button>
-  </form>
-</div>
-<div class="container">
-  <h2 class="my-4">Items</h2>
-  <div class="pagination">
-    <span class="step-links">
-        {% if moodboards.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ moodboards.previous_page_number }}">previous</a>
-        {% endif %}
 
-        <span class="current">
-            Page {{ moodboards.number }} of {{ moodboards.paginator.num_pages }}.
-        </span>
+<div class="container-fluid">
+    <!-- Filter Form Column -->
+    <div class="d-none d-md-block">
+    <form class="form-inline" role="search" method="GET" action="{% url 'moodboard:index' %}">
+      <div class="form-group mb-2 mr-sm-2 form-check">
+        <input class="form-check-input listed-radio" type="radio" id="listed" name="listed_option" value="True">
+        <label class="form-check-label listed-label" for="listed">Listed</label>
+      </div>
+        
+      <div class="cform-group mb-2 mr-sm-2 form-check">
+        <input class="form-check-input not-listed-radio" type="radio" id="not_listed" name="listed_option" value="False">
+        <label class="form-check-label not-listed-label" for="not_listed">Not Listed</label>
+      </div>
 
-        {% if moodboards.has_next %}
-            <a href="?page={{ moodboards.next_page_number }}">next</a>
-            <a href="?page={{ moodboards.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-</div>
-  <div class="row">
-    {% for moodboard in moodboards.object_list %}
-      <div class="col-md-4 col-sm-6 mb-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h5 class="card-title">
-              <a href="{% url 'moodboard:detail' moodboard.id %}">
-                {{ moodboard.title }}
-              </a>
-            </h5>
-            <div class="projcard-tagbox">
-              <span class="badge bg-secondary">{{ moodboard.stock_id }}</span>
-              <p>{{ moodboard.updated_at }}</p>
-              {% if moodboard.listed %}
-                <h5 class="bg-success">Listed on {{ moodboard.listed_at }} by {{ moodboard.listed_by }}</h5>
-              {% else %}
-                <h5 class="bg-danger">Not Listed</h5>
-              {% endif %}
-            </div>
-            <div class="row">
-              {% with first_image=moodboard.images.first %}
-                  {% if first_image %}
-                      <div class="col-12">
-                          <div class="card mb-4">
-                              <!-- Use 'first_image.image' to get the image URL -->
-                              <img src="{{ first_image.image.url }}" loading="lazy" class="card-img-top" alt="Item image" id="image-1" aria-hidden="true">
-                          </div>
-                      </div>
-                  {% else %}
-                      <div class="col-12">
-                          <p>No images for this item.</p>
-                      </div>
-                  {% endif %}
-              {% endwith %}
+      <div class="form-group mb-2 mr-sm-2">
+        <label for="start_date" class="form-label mr-2">Listed Start Date</label>
+        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
+      </div>
+      
+      <div class="form-group mb-2 mr-sm-2">
+        <label for="end_date" class="form-label mr-2">Listed End Date</label>
+        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
+      </div>       
+          
+      <div class="form-group mb-2 mr-sm-2">
+        <input class="form-control me-2" style="max-width: 100%;" name="q" type="search" placeholder="Search" aria-label="Search">
+      </div>
+
+      <div class="form-group mb-2 mr-sm-2">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+      </div>
+    </form>  
+  </div>
+
+    <!-- Burger Button for Mobile -->
+    <div class="d-md-none">
+      <div class="" id="mobileFilterMenu">
+        <form class="" id="search-options-mobile" role="search" method="GET" action="{% url 'moodboard:index' %}">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" id="listed_mobile" name="listed_option" value="True">
+            <label class="form-check-label listed-label" for="listed_mobile">Listed</label>
           </div>
-            <p class="card-text">
-              Submitted by: {{ moodboard.user.username }}
-            </p>
-          </div> <!-- End of card-body -->
-        </div> <!-- End of card -->
-      </div> <!-- End of col-md-4 col-sm-6 mb-4 -->
-    {% endfor %}
+      
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" id="not_listed_mobile" name="listed_option" value="False">
+            <label class="form-check-label not-listed-label" for="not_listed_mobile">Not Listed</label>
+          </div>
+    
+          <div class="mb-3">
+            <label for="start_date_mobile" class="form-label">Listed Start Date</label>
+            <input type="date" class="form-control" id="start_date_mobile" name="start_date" value="{{ request.GET.start_date }}">
+          </div>
+      
+          <div class="mb-3">
+            <label for="end_date_mobile" class="form-label">Listed End Date</label>
+            <input type="date" class="form-control" id="end_date_mobile" name="end_date" value="{{ request.GET.end_date }}">
+          </div>        
+             
+          <div class="mb-3">
+            <input class="form-control" name="q" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-primary mt-2" type="submit">Search</button>
+          </div>
+        </form>  
+      </div>
+    </div>
+
+  <!-- Content Column -->
+  <div class="col-md">
     <div class="pagination">
       <span class="step-links">
-          {% if moodboards.has_previous %}
-              <a href="?page=1">&laquo; first</a>
-              <a href="?page={{ moodboards.previous_page_number }}">previous</a>
-          {% endif %}
-  
-          <span class="current">
-              Page {{ moodboards.number }} of {{ moodboards.paginator.num_pages }}.
-          </span>
-  
-          {% if moodboards.has_next %}
-              <a href="?page={{ moodboards.next_page_number }}">next</a>
-              <a href="?page={{ moodboards.paginator.num_pages }}">last &raquo;</a>
-          {% endif %}
+        {% if moodboards.has_previous %}
+          <a href="?page=1">&laquo; first</a>
+          <a href="?page={{ moodboards.previous_page_number }}">previous</a>
+        {% endif %}
+      
+        <span class="current">
+          Page {{ moodboards.number }} of {{ moodboards.paginator.num_pages }}.
+        </span>
+      
+        {% if moodboards.has_next %}
+          <a href="?page={{ moodboards.next_page_number }}">next</a>
+          <a href="?page={{ moodboards.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
       </span>
-  </div>
-  </div> <!-- End of outer row -->
-  {% else %}
-      <h2 class="my-4">You must be signed in to view this page.</h2>
-  {% endif %}
-</div> <!-- End of container -->
+    </div>
+    
+    <div class="d-flex justify-content-center">
+      <div class="row">
+        {% for moodboard in moodboards.object_list %}
+          <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">
+                  <a href="{% url 'moodboard:detail' moodboard.id %}">
+                    {{ moodboard.title }}
+                  </a>
+                </h5>
+
+                <div class="projcard-tagbox">
+                  <span class="badge bg-secondary">
+                    {{ moodboard.stock_id }}
+                  </span>
+                  <p class="card-text">
+                    Created at {{ moodboard.created_at }} by {{ moodboard.user.username }}
+                  </p>
+                    {% if moodboard.listed %}
+                      <h5 class="bg-success">Listed on {{ moodboard.listed_at }} by {{ moodboard.listed_by }}</h5>
+                    {% else %}
+                      <h5 class="bg-danger">Not Listed</h5>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                  {% with first_image=moodboard.images.first %}
+                      {% if first_image %}
+                        <div class="col-12">
+                          <div class="card mb-4">
+                            <!-- Use 'first_image.image' to get the image URL -->
+                            <img src="{{ first_image.image.url }}" loading="lazy" class="card-img-top" alt="Item image" id="image-1" aria-hidden="true">
+                          </div>
+                        </div>
+                      {% else %}
+                        <div class="col-12">
+                          <p>No images for this item.</p>
+                        </div>
+                      {% endif %}
+                  {% endwith %}
+                </div>
+                </div> <!-- End of card-body -->
+              </div> <!-- End of card -->
+            </div> <!-- End of col-md-4 col-sm-6 mb-4 -->
+          {% endfor %}
+          
+        </div> <!-- End of outer row -->
+        
+
+        {% else %}
+            <h2 class="my-4">You must be signed in to view this page.</h2>
+        {% endif %}
+      </div> <!-- End of container -->
+      <div class="pagination">
+        <span class="step-links">
+            {% if moodboards.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ moodboards.previous_page_number }}">previous</a>
+            {% endif %}
+    
+            <span class="current">
+                Page {{ moodboards.number }} of {{ moodboards.paginator.num_pages }}.
+            </span>
+    
+            {% if moodboards.has_next %}
+                <a href="?page={{ moodboards.next_page_number }}">next</a>
+                <a href="?page={{ moodboards.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+      </div>
+    </div>
+</div>
+
 {% endblock %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var burgerButton = document.getElementById('burgerButton');
+    var mobileFilterMenu = document.getElementById('mobileFilterMenu');
+  
+    burgerButton.addEventListener('click', function() {
+      mobileFilterMenu.classList.toggle('collapse');
+    });
+  });
+</script>

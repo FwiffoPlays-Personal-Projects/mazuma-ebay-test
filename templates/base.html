@@ -27,7 +27,7 @@
             <a class="nav-link" href="{% url 'moodboard:index' %}">
               <i class="fas fa-search" style="color: rgb(112, 112, 112);"></i> <span class="navbar-text"> Find Items</span>
             </a>
-            <a class="nav-link" href="{% url 'moodboard:not_listed_items' %}">
+            <a class="nav-link" href="{% url 'moodboard:index' %}?listed_option=False">
               <i class="fas fa-times" style="color: rgb(184, 37, 37);"></i> <span class="navbar-text"> Not Listed</span>
             </a>             
             <a class="nav-link" href="{% url 'moodboard:create_moodboard' %}">
@@ -50,7 +50,7 @@
   </nav>
 
 
-  <div class="container mt-4 flex-grow-1" style="padding-top: 70px;">
+  <div class="mt-4 flex-grow-1" style="padding-top: 70px;">
     {% if messages %}
         <div class="my-4">
           {% for message in messages %}
@@ -80,7 +80,7 @@
     </ul>
   </div>
   <div class="text-center p-3 bg-secondary text-light">
-    &copy; 2023 Mazuma Mobile. All rights reserved.
+    &copy; 2024 Mazuma Mobile. All rights reserved.
   </div>
 </footer>
 <!-- End of Footer -->

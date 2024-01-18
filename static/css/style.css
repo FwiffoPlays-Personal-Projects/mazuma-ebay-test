@@ -52,9 +52,69 @@
   text-decoration: none;
   cursor: pointer;
 }
+
+.listed-radio:checked + .listed-label {
+  background-color: #28a745;
+  color: white;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.not-listed-radio:checked + .not-listed-label {
+  background-color: #dc3545;
+  color: white;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+/* Hide the radio button but keep it functional */
+.form-check-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Style the labels */
+.form-check-label {
+  display: inline-block;
+  padding: 5px 10px;
+  margin-right: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  background-color: #f8f9fa; /* Default background */
+  color: black; /* Default text color */
+}
+
+/* Change label styles when the radio button is checked */
+.form-check-input:checked + .listed-label {
+  background-color: #28a745;
+  color: white;
+}
+
+.form-check-input:checked + .not-listed-label {
+  background-color: #dc3545;
+  color: white;
+}
   
-@media (max-width: 768px) { /* Adjust this value based on your needs */
+/* Additional mobile form styles */
+#mobileFilterMenu .form-check-label {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+#mobileFilterMenu .form-control, #mobileFilterMenu .btn {
+  width: 100%;
+}
+
+/* Adjust padding and margins as needed for mobile layout */
+
+@media (max-width: 768px) {
   .navbar-text {
     display: none;
+  }
+  .form-control[style] {
+    max-width: 100% !important;
   }
 }

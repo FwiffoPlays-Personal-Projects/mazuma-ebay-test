@@ -7,8 +7,9 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from zipfile import ZipFile
-from datetime import datetime
+from datetime import datetime, time
 from io import BytesIO
 from PIL import Image as PILImage
 from PIL import ImageEnhance
@@ -167,20 +168,48 @@ def index(request):
     Displays a list of all Moodboard objects or a filtered list based on the
     search query.
     """
-    moodboard_list = get_queryset(request)
-    paginator = Paginator(moodboard_list, 10)  # Show 10 items per page
+    moodboards_list = get_queryset(request)
+    
+    listed_option = request.GET.get('listed_option')
+
+    if listed_option == 'True':
+        moodboards_list = moodboards_list.filter(listed=True)
+    elif listed_option == 'False':
+        moodboards_list = moodboards_list.filter(listed=False)
+
+    # Retrieve date range from request
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    if start_date:
+        print("DEBUG: Start date = ", start_date)
+        start_date_naive = datetime.strptime(start_date, '%Y-%m-%d').date()
+        # Combine date with the start of the day (midnight) and make it timezone-aware
+        # start_date_aware = timezone.make_aware(datetime.combine(start_date_naive, time.min))
+        print(str(moodboards_list.filter(listed_at__gte=start_date_naive)))
+        moodboards_filtered = moodboards_list.filter(listed_at__gte=start_date_naive)
+    else:
+        moodboards_filtered = moodboards_list
+        
+    #if end_date:
+     #   print("DEBUG: End date = ", end_date)
+     #   end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+     #   moodboards_filtered = moodboards_list.filter(listed_at__lte=end_date)
+
+    paginator = Paginator(moodboards_filtered, 10)  # Show 10 items per page
 
     page = request.GET.get('page')
+
     try:
-        moodboards = paginator.page(page)
+        moodboards_result = paginator.page(page)
     except PageNotAnInteger:
         # If page is not an integer, deliver first page.
-        moodboards = paginator.page(1)
+        moodboards_result = paginator.page(1)
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
-        moodboards = paginator.page(paginator.num_pages)
+        moodboards_result = paginator.page(paginator.num_pages)
 
-    return render(request, "moodboard/index.html", {"moodboards": moodboards})
+    return render(request, "moodboard/index.html", {"moodboards": moodboards_result})
 
 
 def detail(request, pk):
@@ -265,38 +294,6 @@ def set_description(request, moodboard_id):
         return JsonResponse({'status': 'success'})
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)
-
-
-def listed_items(request):
-    listed_items_list = Moodboard.objects.filter(listed=True).order_by('updated_at')
-    paginator = Paginator(listed_items_list, 10)  # Show 10 items per page
-
-    page = request.GET.get('page')
-    try:
-        moodboards = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        moodboards = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        moodboards = paginator.page(paginator.num_pages)
-    return render(request, "moodboard/index.html", {"moodboards": moodboards})
-
-
-def not_listed_items(request):
-    not_listed_items_list = Moodboard.objects.filter(listed=False).order_by('updated_at')
-    paginator = Paginator(not_listed_items_list, 10)  # Show 10 items per page
-
-    page = request.GET.get('page')
-    try:
-        moodboards = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        moodboards = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        moodboards = paginator.page(paginator.num_pages)
-    return render(request, "moodboard/index.html", {"moodboards": moodboards})
 
 
 def pil_to_cv2(image):
