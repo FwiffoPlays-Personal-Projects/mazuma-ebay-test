@@ -209,7 +209,14 @@ def index(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         moodboards_result = paginator.page(paginator.num_pages)
 
-    return render(request, "moodboard/index.html", {"moodboards": moodboards_result})
+    context = {
+        "moodboards": moodboards_result,
+        "listed_option": listed_option,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+    return render(request, "moodboard/index.html", context)
 
 
 def detail(request, pk):
