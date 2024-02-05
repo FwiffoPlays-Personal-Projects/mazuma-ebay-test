@@ -8,12 +8,14 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.urls import reverse
 from zipfile import ZipFile
 from datetime import datetime, time
 from io import BytesIO
 from PIL import Image as PILImage
 from PIL import ImageEnhance
 from pyzbar.pyzbar import decode as qr_decode
+import csv
 import base64
 import pytesseract
 import requests
@@ -139,28 +141,52 @@ def delete_moodboard(request, pk):
         return redirect("moodboard:detail", pk=pk)
 
 
-def get_queryset(request):
-    """
-    Returns a queryset of Moodboard objects based on the search query.
+def parse_date(date_string):
+    """Parse a date string and return a timezone-aware datetime object, or None if invalid."""
+    date_format = '%Y-%m-%d'
+    try:
+        naive_date = datetime.strptime(date_string, date_format)
+        return timezone.make_aware(naive_date, timezone.get_default_timezone())
+    except (ValueError, TypeError):
+        return None
 
-    If there is a search query, this function filters Moodboard objects by
-    title, description, or tags containing the query. If there is no
-    search query, it returns all Moodboard objects.
-    """
-    query = request.GET.get("q")
+def filter_items(request):
+    moodboards_list = Moodboard.objects.all()
+
+    # Retrieve parameters
+    listed_option = request.GET.get('listed_option', None)
+    query = request.GET.get('q', None)
+
+    # Filter by query
     if query:
-        moodboards = Moodboard.objects.filter(
-            Q(title__icontains=query)
-            | Q(description__icontains=query)
-            | Q(tags__icontains=query)
-            | Q(manufacturer__icontains=query)
-            | Q(model_number__icontains=query)
-            | Q(stock_id__icontains=query)
-            | Q(listed__icontains=query)
+        moodboards_list = moodboards_list.filter(
+            Q(title__icontains=query) | 
+            Q(description__icontains=query) | 
+            Q(tags__icontains=query) | 
+            Q(manufacturer__icontains=query) | 
+            Q(model_number__icontains=query) | 
+            Q(stock_id__icontains=query) | 
+            Q(listed__icontains=query)
         )
-    else:
-        moodboards = Moodboard.objects.all()
-    return moodboards
+
+    # Filter by listed_option
+    if listed_option in ['True', 'False']:
+        moodboards_list = moodboards_list.filter(listed=(listed_option == 'True'))
+
+    # Validate and parse dates
+    start_date = parse_date(request.GET.get('start_date'))
+    end_date = parse_date(request.GET.get('end_date'))
+
+    # Apply date range filter
+    date_field = 'listed_at' if listed_option == 'True' else 'created_at'
+    if start_date and end_date:
+        moodboards_list = moodboards_list.filter(Q(**{f"{date_field}__gte": start_date}) & Q(**{f"{date_field}__lte": end_date}))
+    elif start_date:
+        moodboards_list = moodboards_list.filter(**{f"{date_field}__gte": start_date})
+    elif end_date:
+        moodboards_list = moodboards_list.filter(**{f"{date_field}__lte": end_date})
+
+    return moodboards_list
 
 
 def index(request):
@@ -168,35 +194,9 @@ def index(request):
     Displays a list of all Moodboard objects or a filtered list based on the
     search query.
     """
-    moodboards_list = get_queryset(request)
-    
-    listed_option = request.GET.get('listed_option')
+    moodboards_list = filter_items(request).order_by('created_at')
 
-    if listed_option == 'True':
-        moodboards_list = moodboards_list.filter(listed=True)
-    elif listed_option == 'False':
-        moodboards_list = moodboards_list.filter(listed=False)
-
-    # Retrieve date range from request
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    
-    if start_date:
-        print("DEBUG: Start date = ", start_date)
-        start_date_naive = datetime.strptime(start_date, '%Y-%m-%d').date()
-        # Combine date with the start of the day (midnight) and make it timezone-aware
-        # start_date_aware = timezone.make_aware(datetime.combine(start_date_naive, time.min))
-        print(str(moodboards_list.filter(listed_at__gte=start_date_naive)))
-        moodboards_filtered = moodboards_list.filter(listed_at__gte=start_date_naive)
-    else:
-        moodboards_filtered = moodboards_list
-        
-    #if end_date:
-     #   print("DEBUG: End date = ", end_date)
-     #   end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-     #   moodboards_filtered = moodboards_list.filter(listed_at__lte=end_date)
-
-    paginator = Paginator(moodboards_filtered, 10)  # Show 10 items per page
+    paginator = Paginator(moodboards_list, 10)  # Show 10 items per page
 
     page = request.GET.get('page')
 
@@ -209,11 +209,11 @@ def index(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         moodboards_result = paginator.page(paginator.num_pages)
 
+    export_url = reverse('moodboard:export_stock_ids') + '?' + request.GET.urlencode()
+
     context = {
         "moodboards": moodboards_result,
-        "listed_option": listed_option,
-        "start_date": start_date,
-        "end_date": end_date,
+        "export_url": export_url,
     }
 
     return render(request, "moodboard/index.html", context)
@@ -229,6 +229,28 @@ def detail(request, pk):
     context = {"moodboard": moodboard, "images": images}
     return render(request, "moodboard/detail.html", context)
 
+
+def export_stock_ids(request):
+    moodboards_list = filter_items(request)
+
+    # Get current date and time
+    now = datetime.now()
+    formatted_now = now.strftime("%Y%m%d_%H%M%S")
+
+    # Append date and time to filename
+    filename = f"listed_stock_{formatted_now}.csv"
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Stock ID'])
+
+    for moodboard in moodboards_list:
+        if moodboard.stock_id:
+            writer.writerow([moodboard.stock_id])
+
+    return response
 
 def download_all_images(request, moodboard_id):
     moodboard = Moodboard.objects.get(pk=moodboard_id)

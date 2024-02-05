@@ -1,6 +1,7 @@
 from django.urls import path, include
 from django.conf.urls import handler404, handler403, handler500
 from . import views
+from .views import export_stock_ids
 
 app_name = "moodboard"
 
@@ -18,5 +19,5 @@ urlpatterns = [
     path('extract_stock_id/', views.extract_stock_id, name='extract_stock_id'),
     path('set_stock_id/<int:moodboard_id>/<str:stock_id>/', views.set_stock_id, name='set_stock_id'),
     path('set_description/<int:moodboard_id>/', views.set_description, name='set_description'),
-
+    path('export_stock/', views.export_stock_ids, name='export_stock_ids'),
 ]

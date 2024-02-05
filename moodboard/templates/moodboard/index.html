@@ -20,14 +20,14 @@
       </div>
 
       <div class="form-group mb-2 mr-sm-2">
-        <label for="start_date" class="form-label mr-2">Listed Start Date</label>
+        <label for="start_date" class="form-label mr-2">Start Date</label>
         <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
       </div>
       
       <div class="form-group mb-2 mr-sm-2">
-        <label for="end_date" class="form-label mr-2">Listed End Date</label>
+        <label for="end_date" class="form-label mr-2">End Date</label>
         <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
-      </div>       
+      </div>
           
       <div class="form-group mb-2 mr-sm-2">
         <input class="form-control me-2" style="max-width: 100%;" name="q" type="search" placeholder="Search" aria-label="Search">
@@ -37,7 +37,7 @@
         <button class="btn btn-outline-primary" type="submit">Search</button>
       </div>
     </form>  
-  </div>
+    </div>
 
     <!-- Burger Button for Mobile -->
     <div class="d-md-none">
@@ -54,12 +54,12 @@
           </div>
     
           <div class="mb-3">
-            <label for="start_date_mobile" class="form-label">Listed Start Date</label>
+            <label for="start_date_mobile" class="form-label">Start Date</label>
             <input type="date" class="form-control" id="start_date_mobile" name="start_date" value="{{ request.GET.start_date }}">
           </div>
       
           <div class="mb-3">
-            <label for="end_date_mobile" class="form-label">Listed End Date</label>
+            <label for="end_date_mobile" class="form-label">End Date</label>
             <input type="date" class="form-control" id="end_date_mobile" name="end_date" value="{{ request.GET.end_date }}">
           </div>        
              
@@ -73,6 +73,7 @@
 
   <!-- Content Column -->
   <div class="col-md">
+    <a href="{{ export_url }}" class="btn btn-primary">Export Stock IDs</a>
     <div class="pagination">
       <span class="step-links">
         {% with request|remove_page_param as params %}
